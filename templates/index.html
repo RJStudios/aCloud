@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>placeholder</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: #e0e0e0;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        .container {
+            background: #1e1e1e;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            width: 400px;
+            text-align: center;
+        }
+        h1 {
+            margin-bottom: 20px;
+            color: #f5f5f5;
+        }
+        .upload-options {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+        .upload-options button {
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin: 0 10px;
+            cursor: pointer;
+        }
+        .upload-options button.active {
+            background-color: #0056b3;
+        }
+        .upload-form {
+            display: none;
+        }
+        .upload-form.active {
+            display: block;
+        }
+        textarea, input[type="file"], input[type="text"] {
+            width: calc(100% - 20px);
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #333;
+            box-sizing: border-box;
+            background-color: #2e2e2e;
+            color: #e0e0e0;
+        }
+        button[type="button"] {
+            background-color: #28a745;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 10px 20px;
+            margin-top: 10px;
+            cursor: pointer;
+        }
+        .result {
+            margin-top: 20px;
+            color: #f5f5f5;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>placeholder</h1>
+        <div class="upload-options">
+            <button id="textUploadBtn" onclick="showForm('text')">Upload Text</button>
+            <button id="fileUploadBtn" onclick="showForm('file')">Upload File</button>
+            <button id="urlShortenerBtn" onclick="showForm('url')">Shorten URL</button>
+        </div>
+        <div id="uploadFormContainer">
+            <div id="textForm" class="upload-form">
+                <h2>Upload Text</h2>
+                <form>
+                    <textarea name="content" rows="4" placeholder="Enter text here..."></textarea>
+                    <button type="button" onclick="uploadText()">Upload Text</button>
+                </form>
+                <div id="textResult" class="result"></div>
+            </div>
+            <div id="fileForm" class="upload-form">
+                <h2>Upload File</h2>
+                <form enctype="multipart/form-data">
+                    <input type="file" name="file" />
+                    <button type="button" onclick="uploadFile()">Upload File</button>
+                </form>
+                <div id="fileResult" class="result"></div>
+            </div>
+            <div id="urlForm" class="upload-form">
+                <h2>Shorten URL</h2>
+                <form>
+                    <input type="text" name="url" placeholder="Enter URL here..." />
+                    <button type="button" onclick="shortenUrl()">Shorten URL</button>
+                </form>
+                <div id="urlResult" class="result"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function showForm(type) {
+            document.getElementById('textForm').classList.remove('active');
+            document.getElementById('fileForm').classList.remove('active');
+            document.getElementById('urlForm').classList.remove('active');
+            document.getElementById('textUploadBtn').classList.remove('active');
+            document.getElementById('fileUploadBtn').classList.remove('active');
+            document.getElementById('urlShortenerBtn').classList.remove('active');
+            
+            if (type === 'text') {
+                document.getElementById('textForm').classList.add('active');
+                document.getElementById('textUploadBtn').classList.add('active');
+            } else if (type === 'file') {
+                document.getElementById('fileForm').classList.add('active');
+                document.getElementById('fileUploadBtn').classList.add('active');
+            } else if (type === 'url') {
+                document.getElementById('urlForm').classList.add('active');
+                document.getElementById('urlShortenerBtn').classList.add('active');
+            }
+        }
+
+        function uploadText() {
+            const form = document.querySelector('#textForm form');
+            const formData = new FormData(form);
+
+            fetch('/upload/pastebin', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('textResult').innerHTML = `Text uploaded! <a href="/${data.vanity}">View Link</a>`;
+            });
+        }
+
+        function uploadFile() {
+            const form = document.querySelector('#fileForm form');
+            const formData = new FormData(form);
+
+            fetch('/upload/file', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('fileResult').innerHTML = `File uploaded! <a href="/${data.vanity}">Download Link</a>`;
+            });
+        }
+
+        function shortenUrl() {
+            const form = document.querySelector('#urlForm form');
+            const formData = new FormData(form);
+
+            fetch('/shorten', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                document.getElementById('urlResult').innerHTML = `URL shortened! <a href="/${data.vanity}">View Link</a>`;
+            });
+        }
+    </script>
+</body>
+</html>
