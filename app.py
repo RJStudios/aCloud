@@ -57,6 +57,10 @@ def upload_pastebin():
     html_file_path = os.path.join('templates', f'{vanity}.html')
     with open(html_file_path, 'w') as f:
         f.write(html_content)
+    html_content = render_template('raw.html', content=content)
+    html_file_path = os.path.join('templates', f'{vanity}raw.html')
+    with open(html_file_path, 'w') as f:
+        f.write(html_content)
 
     return jsonify({'vanity': vanity})
 
