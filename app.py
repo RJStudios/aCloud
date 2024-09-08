@@ -119,6 +119,7 @@ def redirect_vanity(vanity):
                 'size': os.path.getsize(file_path),
                 'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
                 'url': url_for('download_file', vanity=vanity)
+            }
 @app.route('/<vanity>/raw', methods=['GET'])
 ef redirect_vanity(vanity):
     target = data_store.get(vanity)
