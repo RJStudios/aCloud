@@ -121,23 +121,11 @@ def redirect_vanity(vanity):
                 'url': url_for('download_file', vanity=vanity)
             }
 @app.route('/<vanity>/raw', methods=['GET'])
-ef redirect_vanity(vanity):
-    target = data_store.get(vanity)
+def rawvanity:
     if target:
         if target['type'] == 'pastebin':
             return render_template(f'{vanity}raw.html')
-        elif target['type'] == 'file':
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{target["filename"]}')
-            file_info = {
-                'name': target['filename'],
-                'size': os.path.getsize(file_path),
-                'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
-                'url': url_for('download_file', vanity=vanity)
-            }
-            return render_template(f'{vanity}.html', **file_info)
-        elif target['type'] == 'url':
-            return render_template(f'{vanity}.html')
-    return 'Not Found', 404
+    
 
 if __name__ == '__main__':
     app.run(debug=True)
