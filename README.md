@@ -16,7 +16,7 @@ As said above, this is a **simple & private** backend (app.py) and frontend (in 
 3. The UI is simple.
 
 4. This is very easily self-hostable </br> </br>
-Rookie Mistake: when you self-host it, you can open it in localhost:5000, when making a file/paste/shortener don't share that localhost link, localhost is only accessible on YOUR network. - instead, u can host it with your domain.
+Rookie Mistake: when you self-host it, you can open it in localhost:7123, when making a file/paste/shortener don't share that localhost link, localhost is only accessible on YOUR network. - instead, u can host it with your domain.
 </br>
 </br>
 5. This project is **COMPLETLY** open source.
@@ -26,4 +26,5 @@ Rookie Mistake: when you self-host it, you can open it in localhost:5000, when m
 </br>
 </br>
 7. Demo:
-```https://cgcristi.xyz/demo.mp4```
+<video src="https://cgcristi.xyz/demo.mp4" controls></video>
+
