@@ -48,10 +48,10 @@ def download_file(vanity):
 @app.route('/upload/pastebin', methods=['POST'])
 def upload_pastebin():
     content = request.form['content']
-    vanity = shortuuid.uuid()[:6] 
+    vanity = shortuuid.uuid()[:6]
     created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
     data_store[vanity] = {'type': 'pastebin', 'content': content, 'created_at': created_at}
-    
+
 
     html_content = render_template('content.html', content=content, created_at=created_at)
     html_file_path = os.path.join('templates', f'{vanity}.html')
@@ -77,7 +77,7 @@ def upload_file():
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{filename}')
         file.save(filepath)
         data_store[vanity] = {'type': 'file', 'filename': filename}
-        
+
 
         file_info = {
             'name': filename,
@@ -103,7 +103,7 @@ def shorten_url():
     html_file_path = os.path.join('templates', f'{vanity}.html')
     with open(html_file_path, 'w') as f:
         f.write(html_content)
-    
+
     return jsonify({'vanity': vanity})
 
 @app.route('/<vanity>', methods=['GET'])
@@ -121,11 +121,11 @@ def redirect_vanity(vanity):
                 'url': url_for('download_file', vanity=vanity)
             }
 @app.route('/<vanity>/raw', methods=['GET'])
-def rawvanity:
+def rawvanity(vanity):
+    target = data_store.get(vanity)
     if target:
         if target['type'] == 'pastebin':
             return render_template(f'{vanity}raw.html')
-    
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True,port=7123)
