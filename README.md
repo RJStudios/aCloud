@@ -22,7 +22,7 @@ Rookie Mistake: when you self-host it, you can open it in localhost:5000, when m
 5. This project is **COMPLETLY** open source.
 </br>
 </br>
-6. You might need to install some pip packages, if you dont have them installed already: ```pip install Flask Werkzeug shortuuid python-dotenv```
+6. You might need to install some pip packages, if you dont have them installed already download this repo and go into the folder and execute ```pip -r install requirements.txt```
 </br>
 </br>
 7. Demo:
