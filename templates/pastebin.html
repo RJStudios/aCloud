@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastebin Content</title>
+    <style>
+        {{ css|safe }}
+        /* Add any additional styles here */
+        .button-container {
+            margin-bottom: 10px;
+        }
+        .button-container button {
+            margin-right: 10px;
+        }
+        .highlight {
+            background-color: #f8f8f8;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 1em;
+            overflow: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Pastebin Content</h1>
+    <p>Created at: {{ created_at }}</p>
+    <p>Detected Language: {{ language }}</p>
+    <div class="button-container">
+        <button id="copy-button" onclick="copyToClipboard()">Copy Raw</button>
+        <a href="{{ url_for('raw_vanity', vanity=vanity) }}" target="_blank"><button>View Raw</button></a>
+    </div>
+    <div class="highlight">
+        {{ content|safe }}
+    </div>
+
+    <script>
+        const rawContent = {{ raw_content|tojson }};
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(rawContent).then(() => {
+                const copyButton = document.getElementById("copy-button");
+                const originalText = copyButton.textContent;
+                copyButton.textContent = "Copied!";
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+    </script>
+</body>
+</html>

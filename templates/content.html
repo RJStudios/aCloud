@@ -1,152 +1,211 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="dark-mode">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Text</title>
+    <title>Content</title>
     <style>
-body {
-    font-family: Arial, sans-serif;
-    background-color: #121212; 
-    color: #e0e0e0; 
-    margin: 0;
-    padding: 0;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-}
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --highlight-bg: #2d2d2d;
+            --highlight-border: #444;
+            --button-bg: #3a3a3a;
+            --button-text: #e0e0e0;
+        }
 
-.container {
-    background: #1e1e1e; 
-    border-radius: 8px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5); 
-    padding: 20px;
-    width: 80%;
-    max-width: 800px;
-    text-align: center;
-}
+        .light-mode {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --highlight-bg: #f8f8f8;
+            --highlight-border: #ccc;
+            --button-bg: #f0f0f0;
+            --button-text: #333333;
+        }
 
-h1, h2 {
-    color: #ffffff; 
-}
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: var(--text-color);
+            background-color: var(--bg-color);
+            transition: background-color 0.3s, color 0.3s;
+        }
 
-p, div {
-    color: #e0e0e0;
-}
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
 
-a {
-    color: #1e90ff; 
-    text-decoration: none; 
-}
+        h1 {
+            margin-bottom: 20px;
+        }
 
-a:hover {
-    text-decoration: underline; 
-}
+        .button-container {
+            margin-bottom: 20px;
+        }
 
-textarea, input[type="file"], input[type="text"], input[type="url"] {
-    background-color: #2c2c2c; 
-    color: #e0e0e0; 
-    border: 1px solid #444444;
-    border-radius: 4px;
-    padding: 10px;
-    box-sizing: border-box;
-}
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            padding: 10px 15px;
+            margin-right: 10px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
 
-button[type="button"] {
-    background-color: #007bff; 
-    color: #ffffff;
-    border: none;
-    border-radius: 4px;
-    padding: 10px 20px;
-    margin-top: 10px;
-    cursor: pointer;
-}
+        button:hover {
+            opacity: 0.8;
+        }
 
-button[type="button"]:hover {
-    background-color: #0056b3; 
-}
+        .highlight {
+            background-color: var(--highlight-bg);
+            border: 1px solid var(--highlight-border);
+            border-radius: 4px;
+            padding: 1em;
+            overflow: auto;
+        }
 
-.result {
-    margin-top: 20px;
-    color: #ffffff; 
-}
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+        }
 
+        a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
 
-.file-details, .content-details {
-    background: #1e1e1e;
-    padding: 15px;
-    border-radius: 8px;
-    border: 1px solid #444444; 
-}
+        a:hover {
+            text-decoration: underline;
+        }
 
-.file-details h3, .content-details h3 {
-    color: #ffffff; 
-}
+        /* Ensure proper contrast for syntax highlighting */
+        .highlight pre {
+            color: var(--text-color);
+        }
 
-.file-details p, .content-details p {
-    color: #e0e0e0; 
-}
+        /* Override Pygments styles for dark mode */
+        .dark-mode .highlight .hll { background-color: #49483e }
+        .dark-mode .highlight .c { color: #75715e } /* Comment */
+        .dark-mode .highlight .err { color: #960050; background-color: #1e0010 } /* Error */
+        .dark-mode .highlight .k { color: #66d9ef } /* Keyword */
+        .dark-mode .highlight .l { color: #ae81ff } /* Literal */
+        .dark-mode .highlight .n { color: #f8f8f2 } /* Name */
+        .dark-mode .highlight .o { color: #f92672 } /* Operator */
+        .dark-mode .highlight .p { color: #f8f8f2 } /* Punctuation */
+        .dark-mode .highlight .cm { color: #75715e } /* Comment.Multiline */
+        .dark-mode .highlight .cp { color: #75715e } /* Comment.Preproc */
+        .dark-mode .highlight .c1 { color: #75715e } /* Comment.Single */
+        .dark-mode .highlight .cs { color: #75715e } /* Comment.Special */
+        .dark-mode .highlight .ge { font-style: italic } /* Generic.Emph */
+        .dark-mode .highlight .gs { font-weight: bold } /* Generic.Strong */
+        .dark-mode .highlight .kc { color: #66d9ef } /* Keyword.Constant */
+        .dark-mode .highlight .kd { color: #66d9ef } /* Keyword.Declaration */
+        .dark-mode .highlight .kn { color: #f92672 } /* Keyword.Namespace */
+        .dark-mode .highlight .kp { color: #66d9ef } /* Keyword.Pseudo */
+        .dark-mode .highlight .kr { color: #66d9ef } /* Keyword.Reserved */
+        .dark-mode .highlight .kt { color: #66d9ef } /* Keyword.Type */
+        .dark-mode .highlight .ld { color: #e6db74 } /* Literal.Date */
+        .dark-mode .highlight .m { color: #ae81ff } /* Literal.Number */
+        .dark-mode .highlight .s { color: #e6db74 } /* Literal.String */
+        .dark-mode .highlight .na { color: #a6e22e } /* Name.Attribute */
+        .dark-mode .highlight .nb { color: #f8f8f2 } /* Name.Builtin */
+        .dark-mode .highlight .nc { color: #a6e22e } /* Name.Class */
+        .dark-mode .highlight .no { color: #66d9ef } /* Name.Constant */
+        .dark-mode .highlight .nd { color: #a6e22e } /* Name.Decorator */
+        .dark-mode .highlight .ni { color: #f8f8f2 } /* Name.Entity */
+        .dark-mode .highlight .ne { color: #a6e22e } /* Name.Exception */
+        .dark-mode .highlight .nf { color: #a6e22e } /* Name.Function */
+        .dark-mode .highlight .nl { color: #f8f8f2 } /* Name.Label */
+        .dark-mode .highlight .nn { color: #f8f8f2 } /* Name.Namespace */
+        .dark-mode .highlight .nx { color: #a6e22e } /* Name.Other */
+        .dark-mode .highlight .py { color: #f8f8f2 } /* Name.Property */
+        .dark-mode .highlight .nt { color: #f92672 } /* Name.Tag */
+        .dark-mode .highlight .nv { color: #f8f8f2 } /* Name.Variable */
+        .dark-mode .highlight .ow { color: #f92672 } /* Operator.Word */
+        .dark-mode .highlight .w { color: #f8f8f2 } /* Text.Whitespace */
+        .dark-mode .highlight .mf { color: #ae81ff } /* Literal.Number.Float */
+        .dark-mode .highlight .mh { color: #ae81ff } /* Literal.Number.Hex */
+        .dark-mode .highlight .mi { color: #ae81ff } /* Literal.Number.Integer */
+        .dark-mode .highlight .mo { color: #ae81ff } /* Literal.Number.Oct */
+        .dark-mode .highlight .sb { color: #e6db74 } /* Literal.String.Backtick */
+        .dark-mode .highlight .sc { color: #e6db74 } /* Literal.String.Char */
+        .dark-mode .highlight .sd { color: #e6db74 } /* Literal.String.Doc */
+        .dark-mode .highlight .s2 { color: #e6db74 } /* Literal.String.Double */
+        .dark-mode .highlight .se { color: #ae81ff } /* Literal.String.Escape */
+        .dark-mode .highlight .sh { color: #e6db74 } /* Literal.String.Heredoc */
+        .dark-mode .highlight .si { color: #e6db74 } /* Literal.String.Interpol */
+        .dark-mode .highlight .sx { color: #e6db74 } /* Literal.String.Other */
+        .dark-mode .highlight .sr { color: #e6db74 } /* Literal.String.Regex */
+        .dark-mode .highlight .s1 { color: #e6db74 } /* Literal.String.Single */
+        .dark-mode .highlight .ss { color: #e6db74 } /* Literal.String.Symbol */
+        .dark-mode .highlight .bp { color: #f8f8f2 } /* Name.Builtin.Pseudo */
+        .dark-mode .highlight .vc { color: #f8f8f2 } /* Name.Variable.Class */
+        .dark-mode .highlight .vg { color: #f8f8f2 } /* Name.Variable.Global */
+        .dark-mode .highlight .vi { color: #f8f8f2 } /* Name.Variable.Instance */
+        .dark-mode .highlight .il { color: #ae81ff } /* Literal.Number.Integer.Long */
 
-.footer {
-    background-color: #2c2f33; 
-    color: #99aab5; 
-    padding: 10px 0;
-    position: fixed;
-    bottom: 0;
-    width: 100%;
-    text-align: center;
-    font-size: 14px;
-}
-
-.footer a {
-    color: #61afef; 
-    text-decoration: none;
-}
-
-.footer a:hover {
-    text-decoration: underline;
-}
-
-.footer .container {
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 15px;
-}
-
-
-
-
+        {{ css|safe }}
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Text</h1>
-        <div class="content">
-            {% if content %}
-                {{ content }}
-            {% elif url %}
-                <p>Redirecting to: <a href="{{ url }}" target="_blank">{{ url }}</a></p>
+        <h1>Content</h1>
+        {% if created_at %}
+        <p>Created at: {{ created_at }}</p>
+        {% endif %}
+        {% if language %}
+        <p>Detected Language: {{ language }}</p>
+        {% endif %}
+        <div class="button-container">
+            <button id="copy-button" onclick="copyToClipboard()">Copy Raw</button>
+            <a href="{{ url_for('raw_vanity', vanity=vanity) }}" target="_blank"><button>View Raw</button></a>
+        </div>
+        <div class="highlight">
+            {% if highlighted_content %}
+                {{ highlighted_content|safe }}
             {% else %}
-                <p>Content not found.</p>
+                <pre>{{ content }}</pre>
             {% endif %}
         </div>
-        {% if created_at %}
-            <div class="details">
-                <p>Created at: {{ created_at }}</p>
-            </div>
-        {% endif %}
     </div>
+
+    <button id="theme-toggle">Toggle Theme</button>
+
+    <script>
+        const rawContent = {{ raw_content|tojson }};
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(rawContent).then(() => {
+                const copyButton = document.getElementById("copy-button");
+                const originalText = copyButton.textContent;
+                copyButton.textContent = "Copied!";
+                setTimeout(() => {
+                    copyButton.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
+        const themeToggle = document.getElementById('theme-toggle');
+        const html = document.documentElement;
+
+        function toggleTheme() {
+            html.classList.toggle('light-mode');
+            localStorage.setItem('lightMode', html.classList.contains('light-mode'));
+        }
+
+        themeToggle.addEventListener('click', toggleTheme);
+
+        // Check for saved theme preference
+        if (localStorage.getItem('lightMode') === 'true') {
+            html.classList.add('light-mode');
+        }
+    </script>
 </body>
-
-<footer class="footer">
-    <div class="container">
-        <p class="footer-text">Source code available on: 
-            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub</a> | 
-            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a>
-        </p>
-    </div>
-</footer>
-
-
 </html>

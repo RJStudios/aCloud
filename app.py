@@ -9,6 +9,11 @@ import threading
 import time
 import shutil
 from datetime import timedelta
+from pygments import highlight
+from pygments.lexers import get_lexer_by_name, guess_lexer
+from pygments.formatters import HtmlFormatter
+from pygments.util import ClassNotFound
+import json
 
 app = Flask(__name__)
 UPLOAD_FOLDER = './uploads'
@@ -86,7 +91,23 @@ def content(vanity):
     if target:
         content_type, content_data = target[1], target[2]
         if content_type == 'pastebin':
-            return render_template('content.html', content=content_data, created_at=target[3])
+            try:
+                lexer = guess_lexer(content_data)
+                language = lexer.aliases[0]
+            except ClassNotFound:
+                language = 'text'
+                lexer = get_lexer_by_name(language)
+            
+            formatter = HtmlFormatter(style='monokai', linenos=True, cssclass="source")
+            highlighted_code = highlight(content_data, lexer, formatter)
+            css = formatter.get_style_defs('.source')
+            return render_template('content.html', 
+                                   highlighted_content=highlighted_code, 
+                                   css=css, 
+                                   raw_content=content_data,
+                                   created_at=target[3],
+                                   vanity=vanity,
+                                   language=language)
         elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{content_data}')
             file_info = {
@@ -206,7 +227,23 @@ def redirect_vanity(vanity):
     if target:
         content_type, content_data = target[1], target[2]
         if content_type == 'pastebin':
-            return render_template('content.html', content=content_data, created_at=target[3])
+            try:
+                lexer = guess_lexer(content_data)
+                language = lexer.aliases[0]
+            except ClassNotFound:
+                language = 'text'
+                lexer = get_lexer_by_name(language)
+            
+            formatter = HtmlFormatter(style='monokai', linenos=True, cssclass="source")
+            highlighted_code = highlight(content_data, lexer, formatter)
+            css = formatter.get_style_defs('.source')
+            return render_template('content.html', 
+                                   highlighted_content=highlighted_code,
+                                   css=css, 
+                                   raw_content=content_data,
+                                   created_at=target[3],
+                                   vanity=vanity,
+                                   language=language)
         elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{content_data}')
             file_info = {
@@ -219,7 +256,7 @@ def redirect_vanity(vanity):
         elif content_type == 'folder':
             return redirect(url_for('folder_content', vanity=vanity))
         elif content_type == 'url':
-            return render_template('content.html', url=content_data)
+            return render_template('content.html', content=content_data, url=content_data)
     return render_template('404.html'), 404
 
 @app.route('/<vanity>/raw', methods=['GET'])
