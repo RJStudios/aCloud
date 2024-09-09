@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect
+from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect, send_file
 from werkzeug.utils import secure_filename
 import shortuuid
 import os
@@ -14,8 +14,11 @@ from pygments.lexers import get_lexer_by_name, guess_lexer
 from pygments.formatters import HtmlFormatter
 from pygments.util import ClassNotFound
 import json
+from flask_login import LoginManager, UserMixin, login_user, login_required, logout_user, current_user
+import hashlib
 
 app = Flask(__name__)
+app.secret_key = 'your_secret_key_here'  # Add this line
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 DATABASE = 'data.db'
@@ -76,6 +79,39 @@ def delete_old_files():
 cleanup_thread = threading.Thread(target=delete_old_files)
 cleanup_thread.daemon = True
 cleanup_thread.start()
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+login_manager.login_view = 'login'
+
+class User(UserMixin):
+    def __init__(self, id, username, password_hash):
+        self.id = id
+        self.username = username
+        self.password_hash = password_hash
+
+    @staticmethod
+    def hash_password(password):
+        salt = os.urandom(32)
+        key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
+        return salt + key
+
+    @staticmethod
+    def verify_password(stored_password, provided_password):
+        salt = stored_password[:32]
+        stored_key = stored_password[32:]
+        new_key = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt, 100000)
+        return stored_key == new_key
+
+@login_manager.user_loader
+def load_user(user_id):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+    user = cursor.fetchone()
+    if user:
+        return User(user[0], user[1], user[2])
+    return None
 
 @app.route('/')
 def index():
@@ -337,6 +373,178 @@ def download_folder_file(vanity, file_name):
     if os.path.isfile(file_path):
         return send_from_directory(folder_path, file_name, as_attachment=True)
     return 'Not Found', 404
+
+@app.route('/register', methods=['GET', 'POST'])
+def register():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        if cursor.fetchone():
+            return "Username already exists"
+        hashed_password = User.hash_password(password)
+        cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
+                       (username, hashed_password))
+        db.commit()
+        return redirect(url_for('login'))
+    return render_template('register.html')
+
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'POST':
+        username = request.form['username']
+        password = request.form['password']
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+        user = cursor.fetchone()
+        if user and User.verify_password(user[2], password):
+            login_user(User(user[0], user[1], user[2]))
+            return redirect(url_for('user_files', username=username))
+        return "Invalid username or password"
+    return render_template('login.html')
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(url_for('index'))
+
+@app.route('/user/<username>')
+def user_files(username):
+    if current_user.is_authenticated and current_user.username == username:
+        user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
+        if not os.path.exists(user_folder):
+            os.makedirs(user_folder)
+        files = os.listdir(user_folder)
+        return render_template('user_files.html', username=username, files=files)
+    return "Unauthorized", 401
+
+@app.route('/user/<username>/upload', methods=['POST'])
+@login_required
+def upload_user_file(username):
+    if current_user.username != username:
+        return "Unauthorized", 401
+    if 'file' not in request.files:
+        return 'No file part', 400
+    file = request.files['file']
+    if file.filename == '':
+        return 'No selected file', 400
+    if file:
+        filename = secure_filename(file.filename)
+        file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, filename)
+        file.save(file_path)
+        return redirect(url_for('user_files', username=username))
+
+@app.route('/user/<username>/delete/<filename>', methods=['POST'])
+@login_required
+def delete_user_file(username, filename):
+    if current_user.username != username:
+        return "Unauthorized", 401
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, filename)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    return redirect(url_for('user_files', username=username))
+
+@app.route('/user/<username>/rename', methods=['POST'])
+@login_required
+def rename_user_file(username):
+    if current_user.username != username:
+        return "Unauthorized", 401
+    old_filename = request.form['old_filename']
+    new_filename = secure_filename(request.form['new_filename'])
+    old_path = os.path.join(app.config['UPLOAD_FOLDER'], username, old_filename)
+    new_path = os.path.join(app.config['UPLOAD_FOLDER'], username, new_filename)
+    if os.path.exists(old_path):
+        os.rename(old_path, new_path)
+    return redirect(url_for('user_files', username=username))
+
+@app.route('/<username>')
+@app.route('/<username>/')
+@app.route('/<username>/<path:filename>')
+def serve_user_page(username, filename=None):
+    print(f"Accessing user page: {username}, filename: {filename}")  # Debug print
+
+    # Check if the username exists in the database
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
+    user = cursor.fetchone()
+    if not user:
+        print(f"User {username} not found")  # Debug print
+        return "User not found", 404
+
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
+    print(f"User folder path: {user_folder}")  # Debug print
+    
+    if not os.path.exists(user_folder):
+        print(f"User folder does not exist for {username}")  # Debug print
+        os.makedirs(user_folder)  # Create the folder if it doesn't exist
+
+    if filename is None or filename == '':
+        # Try to serve index.html
+        index_path = os.path.join(user_folder, 'index.html')
+        print(f"Checking for index.html at: {index_path}")  # Debug print
+        if os.path.exists(index_path):
+            print(f"Serving index.html for {username}")  # Debug print
+            return send_file(index_path)
+        else:
+            print(f"No index.html found, listing files for {username}")  # Debug print
+            # If no index.html, list all files
+            files = os.listdir(user_folder)
+            print(f"Files in {username}'s folder: {files}")  # Debug print
+            return render_template('user_files_public.html', username=username, files=files)
+    else:
+        # Serve the requested file
+        file_path = os.path.join(user_folder, filename)
+        print(f"Attempting to serve file: {file_path}")  # Debug print
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            print(f"Serving file: {file_path}")  # Debug print
+            return send_file(file_path)
+        else:
+            print(f"File not found: {file_path}")  # Debug print
+            return "File not found", 404
+
+@app.route('/debug/users')
+def debug_users():
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT username FROM users")
+    users = cursor.fetchall()
+    
+    user_files = {}
+    for user in users:
+        username = user[0]
+        user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
+        if os.path.exists(user_folder):
+            user_files[username] = os.listdir(user_folder)
+        else:
+            user_files[username] = []
+    
+    return jsonify(user_files)
+
+@app.route('/user/<username>/edit/<path:filename>', methods=['GET', 'POST'])
+@login_required
+def edit_file(username, filename):
+    if current_user.username != username:
+        return "Unauthorized", 401
+    
+    file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, filename)
+    
+    if request.method == 'POST':
+        content = request.form['content']
+        with open(file_path, 'w') as file:
+            file.write(content)
+        return redirect(url_for('user_files', username=username))
+    
+    if os.path.exists(file_path) and os.path.isfile(file_path):
+        with open(file_path, 'r') as file:
+            content = file.read()
+        return render_template('edit_file.html', username=username, filename=filename, content=content)
+    else:
+        return "File not found", 404
 
 if __name__ == '__main__':
     app.run(debug=True, port=7123)

@@ -3,148 +3,128 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aCloud</title>
+    <title>aCloud - File Sharing Service</title>
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #121212;
-            color: #e0e0e0;
+            line-height: 1.6;
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            flex-direction: column;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
         }
         .container {
-            background: #1e1e1e;
-            border-radius: 8px;
-            box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
             padding: 20px;
-            width: 400px;
-            text-align: center;
         }
-        h1 {
+        nav {
             margin-bottom: 20px;
-            color: #f5f5f5;
+        }
+        nav a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin: 0 10px;
         }
         .upload-options {
-            display: flex;
-            justify-content: center;
             margin-bottom: 20px;
         }
         .upload-options button {
-            background-color: #007bff;
-            color: #fff;
+            background-color: #4CAF50;
             border: none;
-            border-radius: 4px;
+            color: white;
             padding: 10px 20px;
-            margin: 0 10px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 4px 2px;
             cursor: pointer;
-        }
-        .upload-options button.active {
-            background-color: #0056b3;
+            border-radius: 4px;
         }
         .upload-form {
             display: none;
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 8px;
+            max-width: 400px;
+            width: 100%;
         }
         .upload-form.active {
             display: block;
         }
-        textarea, input[type="file"], input[type="text"] {
-            width: calc(100% - 20px);
-            margin-top: 10px;
+        .upload-form input[type="text"],
+        .upload-form input[type="file"],
+        .upload-form textarea {
+            width: 100%;
             padding: 10px;
+            margin: 10px 0;
             border-radius: 4px;
-            border: 1px solid #333;
-            box-sizing: border-box;
-            background-color: #2e2e2e;
-            color: #e0e0e0;
+            border: 1px solid #4CAF50;
+            background-color: #333;
+            color: #f0f0f0;
         }
-        button[type="button"] {
-            background-color: #28a745;
-            color: #fff;
+        .upload-form button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
             border: none;
             border-radius: 4px;
-            padding: 10px 20px;
-            margin-top: 10px;
             cursor: pointer;
         }
         .result {
-            margin-top: 20px;
-            color: #f5f5f5;
+            margin-top: 10px;
+            color: #4CAF50;
         }
-
         .footer {
-            background-color: #2c2f33; 
-            color: #99aab5; 
-            padding: 10px 0;
-            position: fixed;
-            bottom: 0;
-            width: 100%;
             text-align: center;
-            font-size: 14px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
         }
-
-        .footer a {
-            color: #61afef; 
-            text-decoration: none;
+        .typewriter-container {
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow: hidden;
+            font-size: 1.2em;
+            margin-bottom: 20px;
         }
-
-        .footer a:hover {
-            text-decoration: underline;
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: #4CAF50;
+            animation: blink 0.7s infinite;
         }
-
-        .footer .container {
-            max-width: 1200px;
-            margin: 0 auto;
-            padding: 0 15px;
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
         }
-
-.typewriter-container {
-    font-size: 23px; 
-    text-align: center;
-    white-space: nowrap; 
-    overflow: hidden;
-    position: relative; 
-}
-
-.typewriter-text {
-    display: inline-block;
-    white-space: nowrap; 
-}
-
-.cursor {
-    display: inline-block;
-    width: 10px;
-    height: 1em;
-    background-color: #ff69b4; 
-    animation: blink 0.7s step-end infinite;
-    position: absolute; 
-    right: 0; 
-    bottom: 0; 
-}
-
-@keyframes blink {
-    50% {
-        background-color: transparent;
-    }
-}
     </style>
 </head>
 <body>
-
     <div class="container">
+        <nav>
+            <a href="{{ url_for('login') }}">Login</a>
+            <a href="{{ url_for('register') }}">Register</a>
+        </nav>
+
         <div class="typewriter-container">
-            <span id="typewriter-text" class="typewriter-text"></span><span id="cursor" class="cursor"></span>
+            <span id="typewriter-text"></span><span id="cursor" class="cursor"></span>
         </div>
-    </br>
-</br>
+
         <div class="upload-options">
-            <button id="textUploadBtn" onclick="showForm('text')">Upload Text</button>
-            <button id="fileUploadBtn" onclick="showForm('file')">Upload File</button>
-            <button id="folderUploadBtn" onclick="showForm('folder')">Upload Folder</button>
-            <button id="urlShortenerBtn" onclick="showForm('url')">Shorten URL</button>
+            <button onclick="showForm('text')">Upload Text</button>
+            <button onclick="showForm('file')">Upload File</button>
+            <button onclick="showForm('folder')">Upload Folder</button>
+            <button onclick="showForm('url')">Shorten URL</button>
         </div>
         <div id="uploadFormContainer">
             <div id="textForm" class="upload-form">
@@ -182,155 +162,151 @@
         </div>
     </div>
 
-
-<script>
-
-document.addEventListener("DOMContentLoaded", function() {
-    const message1 = "Welcome to aCloud.";
-    const message2 = "\n A simple toolbox for file uploading,\n URL shortening and pastebin.";
-    const typewriterTextElement = document.getElementById('typewriter-text');
-    const cursorElement = document.getElementById('cursor');
-    const typingSpeed = 70;
-
-    function typeMessage(message, callback) {
-        let index = 0;
-
-        function typeCharacter() {
-            if (index < message.length) {
-                if (message[index] === '\n') {
-                    typewriterTextElement.innerHTML += '<br>';
-                } else {
-                    typewriterTextElement.innerHTML += message[index]; 
-                }
-                index++;
-                updateCursorPosition(); 
-                setTimeout(typeCharacter, typingSpeed);
-            } else if (callback) {
-                setTimeout(callback, typingSpeed);
-            }
-        }
-
-        typeCharacter();
-    }
-
-    function updateCursorPosition() {
-
-        const textRect = typewriterTextElement.getBoundingClientRect();
-        cursorElement.style.left = (textRect.width + textRect.left - cursorElement.offsetWidth) + 'px';
-    }
-
-    typeMessage(message1, function() {
-        typeMessage(message2);
-    });
-});;
-
-
-document.getElementById('uploadForm').onsubmit = function(e) {
-    e.preventDefault();
-    var formData = new FormData(this);
-    var xhr = new XMLHttpRequest();
-    xhr.open('POST', '/upload/file', true);
-
-    xhr.upload.onprogress = function(e) {
-        if (e.lengthComputable) {
-            var percentComplete = (e.loaded / e.total) * 100;
-            document.getElementById('progressBar').style.display = 'block';
-            document.getElementById('progressBar').value = percentComplete;
-        }
-    };
-
-    xhr.onload = function() {
-        if (xhr.status === 200) {
-            alert('Upload complete!');
-            document.getElementById('progressBar').style.display = 'none';
-        } else {
-            alert('Upload failed.');
-        }
-    };
-    xhr.send(formData);
-};
-
-        function showForm(type) {
-            document.querySelectorAll('.upload-form').forEach(form => {
-                form.classList.remove('active');
-            });
-            document.getElementById(type + 'Form').classList.add('active');
-        }
-
-        function uploadText() {
-            const content = document.querySelector('#textForm textarea').value;
-            fetch('/upload/pastebin', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({ content }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('textResult').innerHTML = `Text uploaded. Access it <a href="/${data.vanity}">here</a>.`;
-            });
-        }
-
-        function uploadFile() {
-            const formData = new FormData();
-            formData.append('file', document.querySelector('#fileForm input[type="file"]').files[0]);
-            fetch('/upload/file', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('fileResult').innerHTML = `File uploaded. Download it <a href="/download/${data.vanity}">here</a>.`;
-            });
-        }
-
-        function uploadFolder() {
-            const files = document.querySelector('#folderForm input[type="file"]').files;
-            if (files.length === 0) {
-                alert('Please select a folder.');
-                return;
-            }
-
-            const formData = new FormData();
-            for (const file of files) {
-                formData.append('file', file);
-            }
-
-            fetch('/upload/folder', {
-                method: 'POST',
-                body: formData,
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('folderResult').innerHTML = `Folder uploaded. View its contents <a href="/${data.vanity}">here</a>.`;
-            });
-        }
-
-        function shortenUrl() {
-            const url = document.querySelector('#urlForm input[name="url"]').value;
-            fetch('/shorten', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/x-www-form-urlencoded',
-                },
-                body: new URLSearchParams({ url }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="/${data.vanity}">here</a>.`;
-            });
-        }
-    </script>
-</body>
-
-<footer class="footer">
-    <div class="container">
-        <p class="footer-text">Source code available on: 
+    <footer class="footer">
+        <p>Source code available on: 
             <a href="https://github.com/realcgcristi/order" target="_blank">GitHub (not up-to-date)</a> | 
             <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git (main)</a>
         </p>
-    </div>
-</footer>
+    </footer>
+
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const message1 = "Welcome to aCloud.";
+        const message2 = "\n A simple toolbox for file uploading,\n URL shortening and pastebin.";
+        const typewriterTextElement = document.getElementById('typewriter-text');
+        const cursorElement = document.getElementById('cursor');
+        const typingSpeed = 70;
+
+        function typeMessage(message, callback) {
+            let index = 0;
+
+            function typeCharacter() {
+                if (index < message.length) {
+                    if (message[index] === '\n') {
+                        typewriterTextElement.innerHTML += '<br>';
+                    } else {
+                        typewriterTextElement.innerHTML += message[index]; 
+                    }
+                    index++;
+                    updateCursorPosition(); 
+                    setTimeout(typeCharacter, typingSpeed);
+                } else if (callback) {
+                    setTimeout(callback, typingSpeed);
+                }
+            }
+
+            typeCharacter();
+        }
+
+        function updateCursorPosition() {
+
+            const textRect = typewriterTextElement.getBoundingClientRect();
+            cursorElement.style.left = (textRect.width + textRect.left - cursorElement.offsetWidth) + 'px';
+        }
+
+        typeMessage(message1, function() {
+            typeMessage(message2);
+        });
+    });;
+
+
+    document.getElementById('uploadForm').onsubmit = function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload/file', true);
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var percentComplete = (e.loaded / e.total) * 100;
+                document.getElementById('progressBar').style.display = 'block';
+                document.getElementById('progressBar').value = percentComplete;
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                alert('Upload complete!');
+                document.getElementById('progressBar').style.display = 'none';
+            } else {
+                alert('Upload failed.');
+            }
+        };
+        xhr.send(formData);
+    };
+
+    function showForm(type) {
+        document.querySelectorAll('.upload-form').forEach(form => {
+            form.classList.remove('active');
+        });
+        document.getElementById(type + 'Form').classList.add('active');
+    }
+
+    function uploadText() {
+        const content = document.querySelector('#textForm textarea').value;
+        fetch('/upload/pastebin', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ content }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('textResult').innerHTML = `Text uploaded. Access it <a href="/${data.vanity}">here</a>.`;
+        });
+    }
+
+    function uploadFile() {
+        const formData = new FormData();
+        formData.append('file', document.querySelector('#fileForm input[type="file"]').files[0]);
+        fetch('/upload/file', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('fileResult').innerHTML = `File uploaded. Download it <a href="/download/${data.vanity}">here</a>.`;
+        });
+    }
+
+    function uploadFolder() {
+        const files = document.querySelector('#folderForm input[type="file"]').files;
+        if (files.length === 0) {
+            alert('Please select a folder.');
+            return;
+        }
+
+        const formData = new FormData();
+        for (const file of files) {
+            formData.append('file', file);
+        }
+
+        fetch('/upload/folder', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('folderResult').innerHTML = `Folder uploaded. View its contents <a href="/${data.vanity}">here</a>.`;
+        });
+    }
+
+    function shortenUrl() {
+        const url = document.querySelector('#urlForm input[name="url"]').value;
+        fetch('/shorten', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({ url }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="/${data.vanity}">here</a>.`;
+        });
+    }
+    </script>
+</body>
 
 </html>

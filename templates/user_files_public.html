@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}'s Files</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        ul {
+            list-style-type: none;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 10px;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <h2>{{ username }}'s Files</h2>
+    <ul>
+    {% for file in files %}
+        <li><a href="{{ url_for('download_folder_file', vanity=username, file_name=file) }}">{{ file }}</a></li>
+    {% endfor %}
+    </ul>
+</body>
+</html>

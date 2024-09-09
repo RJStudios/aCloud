@@ -1,0 +1,27 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>&#80;&#121;&#116;&#104;&#111;&#110;&#32;&#73;&#68;&#69;</title><script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.0/brython.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/brython/3.9.0/brython_stdlib.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/mode/python/python.min.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/show-hint.js"></script><script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/python-hint.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/codemirror.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/theme/monokai.min.css"><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.62.0/addon/hint/show-hint.css"><style>body{background-color:#1e1e1e;color:#d4d4d4;font-family:'Consolas','Courier New',monospace;margin:0;padding:20px}h1{color:#569cd6}#code{width:100%;height:300px}#output{width:100%;height:200px;background-color:#1e1e1e;border:1px solid #3c3c3c;padding:10px;margin-top:10px;overflow-y:auto;font-family:'Consolas','Courier New',monospace}#run-button,#save-button{background-color:#0e639c;color:white;border:none;padding:10px 20px;margin-top:10px;cursor:pointer}#run-button:hover,#save-button:hover{background-color:#1177bb}.toolbar{margin-bottom:10px}.toolbar button{background-color:#3c3c3c;color:#d4d4d4;border:none;padding:5px 10px;margin-right:5px;cursor:pointer}.toolbar button:hover{background-color:#4e4e4e}</style></head><body onload="brython()"><h1>&#80;&#121;&#116;&#104;&#111;&#110;&#32;&#73;&#68;&#69;</h1><div class="toolbar"><button id="undo-button">&#85;&#110;&#100;&#111;</button><button id="redo-button">&#82;&#101;&#100;&#111;</button><button id="save-button">&#83;&#97;&#118;&#101;</button></div><textarea id="code" placeholder="&#69;&#110;&#116;&#101;&#114;&#32;&#121;&#111;&#117;&#114;&#32;&#80;&#121;&#116;&#104;&#111;&#110;&#32;&#99;&#111;&#100;&#101;&#32;&#104;&#101;&#114;&#101;"></textarea><br><button id="run-button">&#82;&#117;&#110;</button><div id="output"></div><script type="text/python">from browser import document,window
+import sys
+class _0x1234:
+ def __init__(_0x5678):_0x5678._0x9abc=document["output"]
+ def write(_0x5678,_0xdef0):_0x5678._0x9abc.innerHTML+=_0xdef0
+sys.stdout=_0x1234()
+sys.stderr=_0x1234()
+def _0x2345(_0x6789):
+ document["output"].innerHTML=""
+ _0xabcd=window.editor.getValue()
+ try:exec(_0xabcd)
+ except Exception as _0xef01:print(f"Error: {str(_0xef01)}")
+document["run-button"].bind("click",_0x2345)
+def _0x3456(_0x789a):window.editor.undo()
+def _0x4567(_0x89ab):window.editor.redo()
+document["undo-button"].bind("click",_0x3456)
+document["redo-button"].bind("click",_0x4567)
+def _0x5678(_0x9abc):
+ _0xbcde=window.editor.getValue()
+ _0xcdef=window.Blob.new([_0xbcde],{'type':'text/plain'})
+ _0xdef0=window.URL.createObjectURL(_0xcdef)
+ _0xef01=document.createElement('a')
+ _0xef01.href=_0xdef0
+ _0xef01.download='python_code.py'
+ _0xef01.click()
+ window.URL.revokeObjectURL(_0xdef0)
+document["save-button"].bind("click",_0x5678)</script><script>var _0x1234=CodeMirror.fromTextArea(document.getElementById("code"),{mode:"python",theme:"monokai",lineNumbers:!0,autoCloseBrackets:!0,matchBrackets:!0,indentUnit:4,tabSize:4,indentWithTabs:!1,extraKeys:{"Ctrl-Space":"autocomplete","Tab":function(_0x5678){_0x5678.somethingSelected()?_0x5678.indentSelection("add"):_0x5678.replaceSelection(_0x5678.getOption("indentWithTabs")?"\t":Array(_0x5678.getOption("indentUnit")+1).join(" "),"end","+input")}},hintOptions:{completeSingle:!1}});_0x1234.on("inputRead",function(_0x2345,_0x3456){if("+input"===_0x3456.origin){var _0x4567=_0x2345.getCursor(),_0x5678=_0x2345.getTokenAt(_0x4567);("variable"===_0x5678.type||"."===_0x5678.string)&&_0x2345.showHint({completeSingle:!1})}})</script></body></html>

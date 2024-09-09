@@ -1,0 +1,21 @@
+<h2>{{ username }}'s Files</h2>
+<form action="{{ url_for('upload_user_file', username=username) }}" method="post" enctype="multipart/form-data">
+    <input type="file" name="file" required>
+    <input type="submit" value="Upload">
+</form>
+<ul>
+{% for file in files %}
+    <li>
+        {{ file }}
+        <form action="{{ url_for('delete_user_file', username=username, filename=file) }}" method="post" style="display: inline;">
+            <input type="submit" value="Delete">
+        </form>
+        <form action="{{ url_for('rename_user_file', username=username) }}" method="post" style="display: inline;">
+            <input type="hidden" name="old_filename" value="{{ file }}">
+            <input type="text" name="new_filename" placeholder="New filename" required>
+            <input type="submit" value="Rename">
+        </form>
+        <a href="{{ url_for('edit_file', username=username, filename=file) }}">Edit</a>
+    </li>
+{% endfor %}
+</ul>
