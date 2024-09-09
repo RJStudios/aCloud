@@ -4,15 +4,73 @@ import shortuuid
 import os
 from datetime import datetime
 import zipfile
+import sqlite3
+import threading
+import time
+import shutil
+from datetime import timedelta
 
 app = Flask(__name__)
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+DATABASE = 'data.db'
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
 
-data_store = {}
+# Database setup and helper functions
+def get_db():
+    db = getattr(threading.current_thread(), '_database', None)
+    if db is None:
+        db = threading.current_thread()._database = sqlite3.connect(DATABASE)
+    return db
+
+def init_db():
+    with app.app_context():
+        db = get_db()
+        with app.open_resource('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
+        db.commit()
+
+@app.teardown_appcontext
+def close_connection(exception):
+    db = getattr(threading.current_thread(), '_database', None)
+    if db is not None:
+        db.close()
+
+# Initialize database
+init_db()
+
+# Add this function to delete old files
+def delete_old_files():
+    while True:
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Delete files older than 30 days
+        thirty_days_ago = datetime.now() - timedelta(days=30)
+        cursor.execute("SELECT vanity, type, data FROM content WHERE created_at < ?", (thirty_days_ago,))
+        old_files = cursor.fetchall()
+        
+        for vanity, content_type, data in old_files:
+            if content_type == 'file':
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{data}')
+                if os.path.exists(file_path):
+                    os.remove(file_path)
+            elif content_type == 'folder':
+                folder_path = os.path.join(app.config['UPLOAD_FOLDER'], vanity)
+                if os.path.exists(folder_path):
+                    shutil.rmtree(folder_path)
+        
+        cursor.execute("DELETE FROM content WHERE created_at < ?", (thirty_days_ago,))
+        db.commit()
+        
+        time.sleep(86400)  # Sleep for 24 hours
+
+# Start the cleanup thread
+cleanup_thread = threading.Thread(target=delete_old_files)
+cleanup_thread.daemon = True
+cleanup_thread.start()
 
 @app.route('/')
 def index():
@@ -20,28 +78,36 @@ def index():
 
 @app.route('/content/<vanity>')
 def content(vanity):
-    target = data_store.get(vanity)
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+    target = cursor.fetchone()
+    
     if target:
-        if target['type'] == 'pastebin':
-            return render_template('content.html', content=target['content'], created_at=target['created_at'])
-        elif target['type'] == 'file':
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{target["filename"]}')
+        content_type, content_data = target[1], target[2]
+        if content_type == 'pastebin':
+            return render_template('content.html', content=content_data, created_at=target[3])
+        elif content_type == 'file':
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{content_data}')
             file_info = {
-                'name': target['filename'],
+                'name': content_data,
                 'size': os.path.getsize(file_path),
                 'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
                 'url': url_for('download_file', vanity=vanity)
             }
             return render_template('file.html', **file_info)
-        elif target['type'] == 'url':
-            return render_template('content.html', url=target['url'])
+        elif content_type == 'url':
+            return render_template('content.html', url=content_data)
     return 'Not Found', 404
 
 @app.route('/download/<vanity>', methods=['GET'])
 def download_file(vanity):
-    target = data_store.get(vanity)
-    if target and target['type'] == 'file':
-        filename = f'{vanity}_{target["filename"]}'
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ? AND type = 'file'", (vanity,))
+    target = cursor.fetchone()
+    if target:
+        filename = f'{vanity}_{target[2]}'
         return send_from_directory(app.config['UPLOAD_FOLDER'], filename, as_attachment=True)
     return 'Not Found', 404
 
@@ -50,12 +116,12 @@ def upload_pastebin():
     content = request.form['content']
     vanity = shortuuid.uuid()[:6]
     created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
-    data_store[vanity] = {'type': 'pastebin', 'content': content, 'created_at': created_at}
-
-    html_content = render_template('content.html', content=content, created_at=created_at)
-    html_file_path = os.path.join('templates', f'{vanity}.html')
-    with open(html_file_path, 'w') as f:
-        f.write(html_content)
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO content (vanity, type, data, created_at) VALUES (?, ?, ?, ?)",
+                   (vanity, 'pastebin', content, created_at))
+    db.commit()
     
     return jsonify({'vanity': vanity})
 
@@ -71,19 +137,13 @@ def upload_file():
         filename = secure_filename(file.filename)
         filepath = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{filename}')
         file.save(filepath)
-        data_store[vanity] = {'type': 'file', 'filename': filename}
-
-        file_info = {
-            'name': filename,
-            'size': os.path.getsize(filepath),
-            'modified_at': datetime.fromtimestamp(os.path.getmtime(filepath)).strftime('%Y-%m-%d %H:%M:%S'),
-            'url': url_for('download_file', vanity=vanity)
-        }
-        html_content = render_template('file.html', **file_info)
-        html_file_path = os.path.join('templates', f'{vanity}.html')
-        with open(html_file_path, 'w') as f:
-            f.write(html_content)
-
+        
+        db = get_db()
+        cursor = db.cursor()
+        cursor.execute("INSERT INTO content (vanity, type, data) VALUES (?, ?, ?)",
+                       (vanity, 'file', filename))
+        db.commit()
+        
         return jsonify({'vanity': vanity})
 
 def save_file(file, folder_path):
@@ -115,7 +175,11 @@ def upload_folder():
 
     handle_uploaded_folder(files, folder_path)
     
-    data_store[vanity] = {'type': 'folder', 'files': [file.filename for file in files]}
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO content (vanity, type, data) VALUES (?, ?, ?)",
+                   (vanity, 'folder', ','.join([file.filename for file in files])))
+    db.commit()
 
     return jsonify({'vanity': vanity})
 
@@ -123,51 +187,59 @@ def upload_folder():
 def shorten_url():
     original_url = request.form['url']
     vanity = shortuuid.uuid()[:6]
-    data_store[vanity] = {'type': 'url', 'url': original_url}
-
-    html_content = f'<html><body><script>window.location.href="{original_url}";</script></body></html>'
-    html_file_path = os.path.join('templates', f'{vanity}.html')
-    with open(html_file_path, 'w') as f:
-        f.write(html_content)
+    
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("INSERT INTO content (vanity, type, data) VALUES (?, ?, ?)",
+                   (vanity, 'url', original_url))
+    db.commit()
 
     return jsonify({'vanity': vanity})
 
 @app.route('/<vanity>', methods=['GET'])
 def redirect_vanity(vanity):
-    target = data_store.get(vanity)
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+    target = cursor.fetchone()
     
     if target:
-        if target['type'] == 'pastebin':
-            return render_template(f'{vanity}.html')
-        elif target['type'] == 'file':
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{target["filename"]}')
+        content_type, content_data = target[1], target[2]
+        if content_type == 'pastebin':
+            return render_template('content.html', content=content_data, created_at=target[3])
+        elif content_type == 'file':
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{content_data}')
             file_info = {
-                'name': target['filename'],
+                'name': content_data,
                 'size': os.path.getsize(file_path),
                 'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
                 'url': url_for('download_file', vanity=vanity)
             }
             return render_template('file.html', **file_info)
-        elif target['type'] == 'folder':
+        elif content_type == 'folder':
             return redirect(url_for('folder_content', vanity=vanity))
-        elif target['type'] == 'url':
-            return render_template('content.html', url=target['url'])
+        elif content_type == 'url':
+            return render_template('content.html', url=content_data)
     return render_template('404.html'), 404
 
 @app.route('/<vanity>/raw', methods=['GET'])
 def raw_vanity(vanity):
-    target = data_store.get(vanity)
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ? AND type = 'pastebin'", (vanity,))
+    target = cursor.fetchone()
     
     if target:
-        if target['type'] == 'pastebin':
-            return render_template(f'{vanity}raw.html')
-
-    return render_template('404.html'), 404
+        return target[2], 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    return 'Not Found', 404
 
 @app.route('/folder/<vanity>', methods=['GET'])
 def folder_content(vanity):
-    target = data_store.get(vanity)
-    if target and target['type'] == 'folder':
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ? AND type = 'folder'", (vanity,))
+    target = cursor.fetchone()
+    if target:
         folder_path = os.path.join(app.config['UPLOAD_FOLDER'], vanity)
         files = []
         for root, _, filenames in os.walk(folder_path):
@@ -188,14 +260,27 @@ def folder_content(vanity):
         prev_url = url_for('folder_content', vanity=vanity, page=page-1) if page > 1 else None
         next_url = url_for('folder_content', vanity=vanity, page=page+1) if end < total_files else None
 
-        return render_template('folder.html', files=files, prev_url=prev_url, next_url=next_url)
+        download_all_url = url_for('download_folder_as_zip', vanity=vanity)
+        
+        # Get the current folder name
+        current_folder = os.path.basename(folder_path)
+
+        return render_template('folder.html', 
+                               files=files, 
+                               prev_url=prev_url, 
+                               next_url=next_url, 
+                               download_all_url=download_all_url,
+                               current_folder=current_folder)
     
     return 'Not Found', 404
 
 @app.route('/folder/<vanity>/download', methods=['GET'])
 def download_folder_as_zip(vanity):
-    target = data_store.get(vanity)
-    if target and target['type'] == 'folder':
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ? AND type = 'folder'", (vanity,))
+    target = cursor.fetchone()
+    if target:
         folder_path = os.path.join(app.config['UPLOAD_FOLDER'], vanity)
         zip_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}.zip')
         

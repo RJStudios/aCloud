@@ -3,37 +3,43 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Folder</title>
+    <title>Folder Contents</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             background-color: #121212;
             color: #e0e0e0;
             margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
+            padding: 20px;
         }
         .container {
             background: #1e1e1e;
             border-radius: 8px;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
             padding: 20px;
-            width: 400px;
-            text-align: center;
+            max-width: 800px;
+            margin: 0 auto;
         }
         h1 {
             margin-bottom: 20px;
             color: #f5f5f5;
+            text-align: center;
         }
-        ul {
+        .folder-structure {
+            background: #2a2a2a;
+            border-radius: 4px;
+            padding: 10px;
+            margin-bottom: 20px;
+        }
+        .file-list {
             list-style-type: none;
             padding: 0;
         }
-        li {
+        .file-list li {
             margin: 10px 0;
+            padding: 5px;
+            background: #333;
+            border-radius: 4px;
         }
         a {
             color: #61afef;
@@ -42,16 +48,56 @@
         a:hover {
             text-decoration: underline;
         }
+        .download-all-btn {
+            display: block;
+            width: 200px;
+            margin: 20px auto;
+            padding: 10px;
+            background-color: #4CAF50;
+            color: white;
+            text-align: center;
+            text-decoration: none;
+            border-radius: 5px;
+            font-weight: bold;
+        }
+        .download-all-btn:hover {
+            background-color: #45a049;
+        }
+        .pagination {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .pagination a {
+            margin: 0 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>Folder</h1>
-        <ul>
+        <h1>Folder Contents</h1>
+        
+        <div class="folder-structure">
+            <!-- You can add a tree-like structure here if needed -->
+            <p>Current folder: /{{ current_folder }}</p>
+        </div>
+
+        <ul class="file-list">
             {% for file in files %}
-            <li><a href="{{ file.url }}">{{ file.name }}</a></li>
+                <li><a href="{{ file.url }}">{{ file.name }}</a></li>
             {% endfor %}
         </ul>
+
+        <a href="{{ download_all_url }}" class="download-all-btn">Download All</a>
+
+        <div class="pagination">
+            {% if prev_url %}
+                <a href="{{ prev_url }}">Previous</a>
+            {% endif %}
+            
+            {% if next_url %}
+                <a href="{{ next_url }}">Next</a>
+            {% endif %}
+        </div>
     </div>
 </body>
 </html>
