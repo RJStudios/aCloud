@@ -109,10 +109,13 @@ def shorten_url():
 @app.route('/<vanity>', methods=['GET'])
 def redirect_vanity(vanity):
     target = data_store.get(vanity)
+    
     if target:
         if target['type'] == 'pastebin':
+
             return render_template(f'{vanity}.html')
         elif target['type'] == 'file':
+
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{target["filename"]}')
             file_info = {
                 'name': target['filename'],
@@ -120,12 +123,22 @@ def redirect_vanity(vanity):
                 'modified_at': datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d %H:%M:%S'),
                 'url': url_for('download_file', vanity=vanity)
             }
+
+            return render_template('file.html', **file_info)
+
+    return render_template('404.html'), 404
+
 @app.route('/<vanity>/raw', methods=['GET'])
-def rawvanity(vanity):
+def raw_vanity(vanity):
     target = data_store.get(vanity)
+    
     if target:
         if target['type'] == 'pastebin':
+
             return render_template(f'{vanity}raw.html')
+
+
+    return render_template('404.html'), 404
 
 if __name__ == '__main__':
     app.run(debug=True,port=7123)
