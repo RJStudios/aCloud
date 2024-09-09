@@ -1,4 +1,7 @@
-Flask
-Werkzeug
-shortuuid
-python-dotenv
+os
+datetime
+zipfile
+sqlite3
+threading
+time
+shutil
