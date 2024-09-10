@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edit Content</title>
+    <style>
+        /* ... (use the same style as other pages) ... */
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Edit Content</h2>
+        <form method="post">
+            <textarea name="content" rows="10" cols="50">{{ content.data }}</textarea>
+            <br>
+            <input type="submit" value="Save" class="btn">
+        </form>
+        <a href="{{ url_for('user_files', username=current_user.username) }}" class="btn">Back to Dashboard</a>
+    </div>
+</body>
+</html>

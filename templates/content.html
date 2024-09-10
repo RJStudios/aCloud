@@ -154,24 +154,29 @@
 </head>
 <body>
     <div class="container">
-        <h1>Content</h1>
-        {% if created_at %}
-        <p>Created at: {{ created_at }}</p>
+        <h2>Content</h2>
+        {% if content.user_id %}
+            <p>Uploaded by: {{ content.username }}</p>
+        {% else %}
+            <p>Uploaded by: Anonymous</p>
         {% endif %}
-        {% if language %}
-        <p>Detected Language: {{ language }}</p>
+        <p>Created at: {{ content.created_at }}</p>
+        
+        {% if highlighted_content %}
+            <style>{{ css }}</style>
+            {{ highlighted_content|safe }}
+        {% elif url %}
+            <p>Shortened URL: <a href="{{ url }}">{{ url }}</a></p>
+        {% else %}
+            <pre>{{ raw_content }}</pre>
         {% endif %}
-        <div class="button-container">
-            <button id="copy-button" onclick="copyToClipboard()">Copy Raw</button>
-            <a href="{{ url_for('raw_vanity', vanity=vanity) }}" target="_blank"><button>View Raw</button></a>
-        </div>
-        <div class="highlight">
-            {% if highlighted_content %}
-                {{ highlighted_content|safe }}
-            {% else %}
-                <pre>{{ content }}</pre>
-            {% endif %}
-        </div>
+        
+        {% if current_user.is_authenticated and current_user.id == content.user_id %}
+            <a href="{{ url_for('edit_content', vanity=content.vanity) }}" class="btn">Edit</a>
+            <form action="{{ url_for('delete_content', vanity=content.vanity) }}" method="post" style="display: inline;">
+                <button type="submit" class="btn">Delete</button>
+            </form>
+        {% endif %}
     </div>
 
     <button id="theme-toggle">Toggle Theme</button>

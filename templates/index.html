@@ -112,8 +112,13 @@
 <body>
     <div class="container">
         <nav>
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Register</a>
+            {% if user %}
+                <a href="{{ url_for('user_files', username=user.username) }}">View Dashboard</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
         </nav>
 
         <div class="typewriter-container">

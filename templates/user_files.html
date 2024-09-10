@@ -1,21 +1,269 @@
-<h2>{{ username }}'s Files</h2>
-<form action="{{ url_for('upload_user_file', username=username) }}" method="post" enctype="multipart/form-data">
-    <input type="file" name="file" required>
-    <input type="submit" value="Upload">
-</form>
-<ul>
-{% for file in files %}
-    <li>
-        {{ file }}
-        <form action="{{ url_for('delete_user_file', username=username, filename=file) }}" method="post" style="display: inline;">
-            <input type="submit" value="Delete">
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ username }}'s Dashboard</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            margin: 0;
+            padding: 20px;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
+            display: flex;
+            justify-content: center;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+        }
+        h2, h3 {
+            color: #4CAF50;
+            text-align: center;
+        }
+        nav {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        nav a, .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        nav a:hover, .btn:hover {
+            background-color: #45a049;
+        }
+        form {
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        input[type="text"], input[type="file"] {
+            padding: 8px;
+            margin-right: 10px;
+            border-radius: 4px;
+            border: 1px solid #4CAF50;
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        .file-list {
+            list-style-type: none;
+            padding: 0;
+        }
+        .file-item {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .file-icon {
+            margin-right: 10px;
+        }
+        .file-name {
+            flex-grow: 1;
+        }
+        .file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .folder {
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>{{ username }}'s Dashboard</h2>
+        <nav>
+            <a href="{{ url_for('index') }}">Home</a>
+            <a href="{{ url_for('logout') }}">Logout</a>
+        </nav>
+
+        <form action="{{ url_for('toggle_index', username=username) }}" method="get" style="text-align: center;">
+            <label>
+                <input type="checkbox" onchange="this.form.submit()" {% if ignore_index %}checked{% endif %}>
+                Ignore index.html and always show file listing
+            </label>
         </form>
-        <form action="{{ url_for('rename_user_file', username=username) }}" method="post" style="display: inline;">
-            <input type="hidden" name="old_filename" value="{{ file }}">
-            <input type="text" name="new_filename" placeholder="New filename" required>
-            <input type="submit" value="Rename">
+
+        {% if index_exists and not ignore_index %}
+        <p style="text-align: center;">An index.html file exists in this folder. When viewing publicly, this file will be displayed instead of the file listing.</p>
+        {% endif %}
+
+        <h3>Upload File</h3>
+        <form action="{{ url_for('upload_user_file', username=username) }}" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="subpath" value="{{ current_path }}">
+            <input type="file" name="file" required>
+            <input type="submit" value="Upload" class="btn">
         </form>
-        <a href="{{ url_for('edit_file', username=username, filename=file) }}">Edit</a>
-    </li>
-{% endfor %}
-</ul>
+
+        <h3>Create Folder</h3>
+        <form action="{{ url_for('create_folder', username=username) }}" method="post">
+            <input type="hidden" name="subpath" value="{{ current_path }}">
+            <input type="text" name="folder_name" placeholder="New folder name" required>
+            <input type="submit" value="Create Folder" class="btn">
+        </form>
+
+        <h3>Files and Folders</h3>
+        <p style="text-align: center;">Current folder: {{ current_folder or 'Root' }}</p>
+
+        <ul class="file-list">
+        {% if parent_folder is not none %}
+            <li class="file-item folder">
+                <span class="file-icon">📁</span>
+                <span class="file-name">
+                    <a href="{{ url_for('user_files', username=username, subpath=parent_folder) }}">..</a>
+                </span>
+                <div class="file-actions">
+                    <!-- No actions for parent directory -->
+                </div>
+            </li>
+        {% endif %}
+        {% for item in items %}
+            <li class="file-item {% if item.type == 'folder' %}folder{% endif %}">
+                <span class="file-icon">{% if item.type == 'folder' %}📁{% else %}📄{% endif %}</span>
+                <span class="file-name">
+                    {% if item.type == 'folder' %}
+                        <a href="{{ url_for('user_files', username=username, subpath=item.path) }}">{{ item.name }}</a>
+                    {% else %}
+                        {{ item.name }}
+                    {% endif %}
+                </span>
+                <div class="file-actions">
+                    <button onclick="deleteItem('{{ item.name }}', '{{ item.type }}')" class="btn">Delete</button>
+                    <button onclick="renameItem('{{ item.name }}', '{{ item.type }}')" class="btn">Rename</button>
+                    <button onclick="moveItem('{{ item.name }}', '{{ item.type }}')" class="btn">Move</button>
+                    <button onclick="copyItem('{{ item.name }}', '{{ item.type }}')" class="btn">Copy</button>
+                    {% if item.type == 'file' %}
+                        <a href="{{ url_for('edit_file', username=username, filename=item.path) }}" class="btn">Edit</a>
+                    {% endif %}
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+
+        <h3>Your Uploads</h3>
+        <ul class="file-list">
+        {% for upload in uploads %}
+            <li class="file-item">
+                <span class="file-icon">
+                    {% if upload.type == 'pastebin' %}📝
+                    {% elif upload.type == 'file' %}📄
+                    {% elif upload.type == 'folder' %}📁
+                    {% elif upload.type == 'url' %}🔗
+                    {% endif %}
+                </span>
+                <span class="file-name">
+                    <a href="{{ url_for('redirect_vanity', path=upload.vanity) }}">{{ upload.vanity }}</a>
+                    ({{ upload.type }})
+                </span>
+                <div class="file-actions">
+                    {% if upload.type in ['pastebin', 'url'] %}
+                        <a href="{{ url_for('edit_content', vanity=upload.vanity) }}" class="btn">Edit</a>
+                    {% endif %}
+                    <form action="{{ url_for('delete_content', vanity=upload.vanity) }}" method="post" style="display: inline;">
+                        <button type="submit" class="btn">Delete</button>
+                    </form>
+                </div>
+            </li>
+        {% endfor %}
+        </ul>
+    </div>
+
+    <script>
+        function deleteItem(name, type) {
+            if (confirm(`Are you sure you want to delete this ${type}?`)) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('delete_user_file', username=username, filename='') }}" + name;
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function renameItem(name, type) {
+            const newName = prompt(`Enter new name for this ${type}:`, name);
+            if (newName && newName !== name) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('rename_user_file', username=username, subpath=current_path) }}";
+                const oldInput = document.createElement('input');
+                oldInput.type = 'hidden';
+                oldInput.name = 'old_filename';
+                oldInput.value = name;
+                const newInput = document.createElement('input');
+                newInput.type = 'hidden';
+                newInput.name = 'new_filename';
+                newInput.value = newName;
+                form.appendChild(oldInput);
+                form.appendChild(newInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function moveItem(name, type) {
+            const destination = prompt(`Enter destination path for this ${type}:`, '/');
+            if (destination) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('move_item', username=username, subpath=current_path) }}";
+                const nameInput = document.createElement('input');
+                nameInput.type = 'hidden';
+                nameInput.name = 'item_name';
+                nameInput.value = name;
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'item_type';
+                typeInput.value = type;
+                const destInput = document.createElement('input');
+                destInput.type = 'hidden';
+                destInput.name = 'destination_folder';
+                destInput.value = destination;
+                form.appendChild(nameInput);
+                form.appendChild(typeInput);
+                form.appendChild(destInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        function copyItem(name, type) {
+            const destination = prompt(`Enter destination path to copy this ${type}:`, '/');
+            if (destination) {
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = "{{ url_for('copy_item', username=username, subpath=current_path) }}";
+                const nameInput = document.createElement('input');
+                nameInput.type = 'hidden';
+                nameInput.name = 'item_name';
+                nameInput.value = name;
+                const typeInput = document.createElement('input');
+                typeInput.type = 'hidden';
+                typeInput.name = 'item_type';
+                typeInput.value = type;
+                const destInput = document.createElement('input');
+                destInput.type = 'hidden';
+                destInput.name = 'destination_folder';
+                destInput.value = destination;
+                form.appendChild(nameInput);
+                form.appendChild(typeInput);
+                form.appendChild(destInput);
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+    </script>
+</body>
+</html>

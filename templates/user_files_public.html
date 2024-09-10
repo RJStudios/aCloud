@@ -16,12 +16,19 @@
         h2 {
             color: #4CAF50;
         }
-        ul {
-            list-style-type: none;
+        .file-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             padding: 0;
+            list-style-type: none;
         }
-        li {
-            margin-bottom: 10px;
+        .file-item {
+            background-color: #2a2a2a;
+            padding: 10px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
         }
         a {
             color: #4CAF50;
@@ -30,13 +37,34 @@
         a:hover {
             text-decoration: underline;
         }
+        .folder {
+            font-weight: bold;
+        }
+        .file-icon {
+            margin-right: 5px;
+        }
     </style>
 </head>
 <body>
     <h2>{{ username }}'s Files</h2>
-    <ul>
+    <p>Current folder: {{ current_folder or 'Root' }}</p>
+
+    {% if parent_url is not none %}
+    <p><a href="{{ parent_url }}">Parent Directory</a></p>
+    {% endif %}
+
+    <ul class="file-list">
+    {% for folder in folders %}
+        <li class="file-item folder">
+            <span class="file-icon">📁</span>
+            <a href="{{ url_for('serve_user_page', username=username, filename=folder.path) }}">{{ folder.name }}</a>
+        </li>
+    {% endfor %}
     {% for file in files %}
-        <li><a href="{{ url_for('download_folder_file', vanity=username, file_name=file) }}">{{ file }}</a></li>
+        <li class="file-item">
+            <span class="file-icon">📄</span>
+            <a href="{{ url_for('serve_user_page', username=username, filename=file.path) }}">{{ file.name }}</a>
+        </li>
     {% endfor %}
     </ul>
 </body>
