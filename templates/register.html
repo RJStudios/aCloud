@@ -3,60 +3,87 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Register</title>
+    <title>Register - aCloud</title>
     <style>
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
-            padding: 20px;
-            background-color: #1a1a1a;
-            color: #f0f0f0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 100vh;
+            min-height: 100vh;
+            background-color: #1a1a1a;
+            color: #f0f0f0;
         }
-        .register-container {
+        .container {
             background-color: #2a2a2a;
             padding: 20px;
-            border-radius: 5px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
             width: 300px;
         }
         h2 {
-            color: #4CAF50;
             text-align: center;
+            color: #4CAF50;
         }
         form {
             display: flex;
             flex-direction: column;
         }
-        input {
-            margin: 10px 0;
-            padding: 10px;
+        label {
+            margin-bottom: 5px;
+        }
+        input[type="text"],
+        input[type="password"] {
+            padding: 8px;
+            margin-bottom: 10px;
             border-radius: 4px;
             border: 1px solid #4CAF50;
             background-color: #333;
             color: #f0f0f0;
         }
-        input[type="submit"] {
+        button {
             background-color: #4CAF50;
             color: white;
+            padding: 10px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 16px;
         }
-        input[type="submit"]:hover {
+        button:hover {
             background-color: #45a049;
+        }
+        p {
+            text-align: center;
+            margin-top: 15px;
+        }
+        a {
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
         }
     </style>
 </head>
 <body>
-    <div class="register-container">
+    <div class="container">
         <h2>Register</h2>
-        <form method="post">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="submit" value="Register">
+        <form method="POST">
+            <div>
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit">Register</button>
         </form>
+        <p>Already have an account? <a href="{{ url_for('login') }}">Login here</a></p>
     </div>
 </body>
 </html>

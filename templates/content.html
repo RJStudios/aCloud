@@ -86,6 +86,8 @@
         /* Ensure proper contrast for syntax highlighting */
         .highlight pre {
             color: var(--text-color);
+            white-space: pre-wrap;
+            word-wrap: break-word;
         }
 
         /* Override Pygments styles for dark mode */
@@ -155,46 +157,64 @@
 <body>
     <div class="container">
         <h2>Content</h2>
-        {% if content.user_id %}
+        {% if content %}
             <p>Uploaded by: {{ content.username }}</p>
+            <p>Created at: {{ content.created_at }}</p>
+            
+            {% if highlighted_content %}
+                <style>{{ css|safe }}</style>
+                <div class="highlight">
+                    {{ highlighted_content|safe }}
+                </div>
+                <button onclick="copyToClipboard()" class="btn">Copy</button>
+                <a href="{{ url_for('raw_vanity', vanity=content.vanity) }}" class="btn">View Raw</a>
+                {% if current_user.is_authenticated and current_user.id == content.user_id %}
+                    <a href="{{ url_for('edit_content', vanity=content.vanity) }}" class="btn">Edit</a>
+                {% endif %}
+            {% elif url %}
+                <p>Shortened URL: <a href="{{ url }}">{{ url }}</a></p>
+                <button onclick="copyToClipboard()" class="btn">Copy URL</button>
+            {% elif raw_content %}
+                <pre style="white-space: pre-wrap; word-wrap: break-word;">{{ raw_content }}</pre>
+                <button onclick="copyToClipboard()" class="btn">Copy</button>
+                <a href="{{ url_for('raw_vanity', vanity=content.vanity) }}" class="btn">View Raw</a>
+                {% if current_user.is_authenticated and current_user.id == content.user_id %}
+                    <a href="{{ url_for('edit_content', vanity=content.vanity) }}" class="btn">Edit</a>
+                {% endif %}
+            {% else %}
+                <p>No content available</p>
+            {% endif %}
+            
+            {% if current_user.is_authenticated and current_user.id == content.user_id %}
+                <form action="{{ url_for('delete_content', vanity=content.vanity) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn">Delete</button>
+                </form>
+            {% endif %}
         {% else %}
-            <p>Uploaded by: Anonymous</p>
-        {% endif %}
-        <p>Created at: {{ content.created_at }}</p>
-        
-        {% if highlighted_content %}
-            <style>{{ css }}</style>
-            {{ highlighted_content|safe }}
-        {% elif url %}
-            <p>Shortened URL: <a href="{{ url }}">{{ url }}</a></p>
-        {% else %}
-            <pre>{{ raw_content }}</pre>
-        {% endif %}
-        
-        {% if current_user.is_authenticated and current_user.id == content.user_id %}
-            <a href="{{ url_for('edit_content', vanity=content.vanity) }}" class="btn">Edit</a>
-            <form action="{{ url_for('delete_content', vanity=content.vanity) }}" method="post" style="display: inline;">
-                <button type="submit" class="btn">Delete</button>
-            </form>
+            <p>No content found.</p>
         {% endif %}
     </div>
 
     <button id="theme-toggle">Toggle Theme</button>
 
     <script>
-        const rawContent = {{ raw_content|tojson }};
+        const rawContent = {{ raw_content|tojson|default('null') }};
+        const url = {{ url|tojson|default('null') }};
 
         function copyToClipboard() {
-            navigator.clipboard.writeText(rawContent).then(() => {
-                const copyButton = document.getElementById("copy-button");
-                const originalText = copyButton.textContent;
-                copyButton.textContent = "Copied!";
-                setTimeout(() => {
-                    copyButton.textContent = originalText;
-                }, 2000);
-            }).catch(err => {
-                console.error('Failed to copy text: ', err);
-            });
+            let textToCopy = rawContent;
+            if (url) {
+                textToCopy = url;
+            }
+            if (textToCopy) {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    alert('Copied to clipboard!');
+                }).catch(err => {
+                    console.error('Failed to copy text: ', err);
+                });
+            } else {
+                console.error('No content to copy');
+            }
         }
 
         const themeToggle = document.getElementById('theme-toggle');

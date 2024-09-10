@@ -128,7 +128,6 @@
         <div class="upload-options">
             <button onclick="showForm('text')">Upload Text</button>
             <button onclick="showForm('file')">Upload File</button>
-            <button onclick="showForm('folder')">Upload Folder</button>
             <button onclick="showForm('url')">Shorten URL</button>
         </div>
         <div id="uploadFormContainer">
@@ -147,14 +146,6 @@
                     <button type="button" onclick="uploadFile()">Upload File</button>
                 </form>
                 <div id="fileResult" class="result"></div>
-            </div>
-            <div id="folderForm" class="upload-form">
-                <h2>Upload Folder</h2>
-                <form enctype="multipart/form-data">
-                    <input type="file" name="file" webkitdirectory directory />
-                    <button type="button" onclick="uploadFolder()">Upload Folder</button>
-                </form>
-                <div id="folderResult" class="result"></div>
             </div>
             <div id="urlForm" class="upload-form">
                 <h2>Shorten URL</h2>
@@ -252,48 +243,45 @@
         fetch('/upload/pastebin', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({ content }),
+            body: JSON.stringify({ content: content }),
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('textResult').innerHTML = `Text uploaded. Access it <a href="/${data.vanity}">here</a>.`;
+            if (data.success) {
+                const simpleUrl = `${window.location.origin}/${data.vanity}`;
+                document.getElementById('textResult').innerHTML = `Pastebin created. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
+            } else {
+                document.getElementById('textResult').innerHTML = `Error: ${data.error}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('textResult').innerHTML = `An error occurred: ${error}`;
         });
     }
 
     function uploadFile() {
         const formData = new FormData();
-        formData.append('file', document.querySelector('#fileForm input[type="file"]').files[0]);
+        const fileInput = document.querySelector('#fileForm input[type="file"]');
+        formData.append('file', fileInput.files[0]);
         fetch('/upload/file', {
             method: 'POST',
             body: formData,
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('fileResult').innerHTML = `File uploaded. Download it <a href="/download/${data.vanity}">here</a>.`;
-        });
-    }
-
-    function uploadFolder() {
-        const files = document.querySelector('#folderForm input[type="file"]').files;
-        if (files.length === 0) {
-            alert('Please select a folder.');
-            return;
-        }
-
-        const formData = new FormData();
-        for (const file of files) {
-            formData.append('file', file);
-        }
-
-        fetch('/upload/folder', {
-            method: 'POST',
-            body: formData,
+            if (data.success) {
+                const simpleUrl = `${window.location.origin}/${data.vanity}`;
+                document.getElementById('fileResult').innerHTML = `File uploaded. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
+            } else {
+                document.getElementById('fileResult').innerHTML = `Error: ${data.error}`;
+            }
         })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('folderResult').innerHTML = `Folder uploaded. View its contents <a href="/${data.vanity}">here</a>.`;
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('fileResult').innerHTML = `An error occurred: ${error}`;
         });
     }
 
@@ -302,13 +290,21 @@
         fetch('/shorten', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({ url }),
+            body: JSON.stringify({ url: url }),
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="/${data.vanity}">here</a>.`;
+            if (data.success) {
+                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${data.short_url}">${data.short_url}</a>`;
+            } else {
+                document.getElementById('urlResult').innerHTML = `Error: ${data.error}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('urlResult').innerHTML = `An error occurred: ${error}`;
         });
     }
     </script>
