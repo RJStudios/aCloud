@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect, send_file, session, make_response, flash
+from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect, send_file, session, make_response, flash, g
 from werkzeug.utils import secure_filename
 import shortuuid
 import os
@@ -29,9 +29,9 @@ if not os.path.exists(UPLOAD_FOLDER):
 
 # Database setup and helper functions
 def get_db():
-    db = getattr(threading.current_thread(), '_database', None)
+    db = getattr(g, '_database', None)
     if db is None:
-        db = threading.current_thread()._database = sqlite3.connect(DATABASE)
+        db = g._database = sqlite3.connect(DATABASE)
     return db
 
 def init_db():
@@ -39,16 +39,30 @@ def init_db():
         db = get_db()
         cursor = db.cursor()
         
-        # Check if users table exists
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
-        if not cursor.fetchone():
-            # If it doesn't exist, create it
-            with app.open_resource('schema.sql', mode='r') as f:
-                db.cursor().executescript(f.read())
-            db.commit()
-            print("Database initialized with users table.")
-        else:
-            print("Users table already exists.")
+        # Create users table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                api_key TEXT
+            )
+        ''')
+        
+        # Create content table
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS content (
+                vanity TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                data TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                user_id INTEGER,
+                FOREIGN KEY (user_id) REFERENCES users (id)
+            )
+        ''')
+        
+        db.commit()
+        print("Database initialized with users and content tables.")
 
 # Call init_db() when the application starts
 with app.app_context():
@@ -69,7 +83,7 @@ def migrate_db():
 
 @app.teardown_appcontext
 def close_connection(exception):
-    db = getattr(threading.current_thread(), '_database', None)
+    db = getattr(g, '_database', None)
     if db is not None:
         db.close()
 
@@ -85,29 +99,30 @@ def get_username(user_id):
 
 # Add this function to delete old files
 def delete_old_files():
-    while True:
-        db = get_db()
-        cursor = db.cursor()
-        
-        # Delete files older than 30 days
-        thirty_days_ago = datetime.now() - timedelta(days=30)
-        cursor.execute("SELECT vanity, type, data FROM content WHERE created_at < ?", (thirty_days_ago,))
-        old_files = cursor.fetchall()
-        
-        for vanity, content_type, data in old_files:
-            if content_type == 'file':
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{data}')
-                if os.path.exists(file_path):
-                    os.remove(file_path)
-            elif content_type == 'folder':
-                folder_path = os.path.join(app.config['UPLOAD_FOLDER'], vanity)
-                if os.path.exists(folder_path):
-                    shutil.rmtree(folder_path)
-        
-        cursor.execute("DELETE FROM content WHERE created_at < ?", (thirty_days_ago,))
-        db.commit()
-        
-        time.sleep(86400)  # Sleep for 24 hours
+    with app.app_context():
+        while True:
+            db = get_db()
+            cursor = db.cursor()
+            
+            # Delete files older than 30 days
+            thirty_days_ago = datetime.now() - timedelta(days=30)
+            cursor.execute("SELECT vanity, type, data FROM content WHERE created_at < ?", (thirty_days_ago,))
+            old_files = cursor.fetchall()
+            
+            for vanity, content_type, data in old_files:
+                if content_type == 'file':
+                    file_path = os.path.join(app.config['UPLOAD_FOLDER'], f'{vanity}_{data}')
+                    if os.path.exists(file_path):
+                        os.remove(file_path)
+                elif content_type == 'folder':
+                    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], vanity)
+                    if os.path.exists(folder_path):
+                        shutil.rmtree(folder_path)
+            
+            cursor.execute("DELETE FROM content WHERE created_at < ?", (thirty_days_ago,))
+            db.commit()
+            
+            time.sleep(86400)  # Sleep for 24 hours
 
 # Start the cleanup thread
 cleanup_thread = threading.Thread(target=delete_old_files)
@@ -236,6 +251,7 @@ def serve_user_page(username, filename=None):
                            current_folder=current_folder)
 
 @app.route('/<vanity>')
+@app.route('/<vanity>/download')
 def redirect_vanity(vanity):
     db = get_db()
     cursor = db.cursor()
@@ -248,7 +264,20 @@ def redirect_vanity(vanity):
         if content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
-                return send_file(file_path)
+                if '/download' in request.path:
+                    return send_file(file_path, as_attachment=True)
+                else:
+                    # Embed the file if it's an image, video, or audio
+                    file_extension = os.path.splitext(content_data)[1].lower()
+                    if file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.svg']:
+                        return send_file(file_path, mimetype=f'image/{file_extension[1:]}')
+                    elif file_extension in ['.mp3', '.wav']:
+                        return send_file(file_path, mimetype=f'audio/{file_extension[1:]}')
+                    elif file_extension in ['.mp4', '.webm']:
+                        return send_file(file_path, mimetype=f'video/{file_extension[1:]}')
+                    else:
+                        # For other file types, send as attachment
+                        return send_file(file_path, as_attachment=True)
             else:
                 return "File not found", 404
         elif content_type == 'url':
@@ -791,11 +820,6 @@ def api_upload():
                 
                 url = url_for('redirect_vanity', vanity=vanity, _external=True)
                 delete_url = url_for('delete_content', vanity=vanity, _external=True)
-                return jsonify({
-                    'status': 'success',
-                    'url': url,
-                    'deletion_url': delete_url,
-                })
             else:
                 # Handle other file types
                 vanity = shortuuid.uuid()[:8]
@@ -809,11 +833,12 @@ def api_upload():
                 
                 url = url_for('redirect_vanity', vanity=new_filename, _external=True)
                 delete_url = url_for('delete_content', vanity=new_filename, _external=True)
-                return jsonify({
-                    'status': 'success',
-                    'url': url,
-                    'deletion_url': delete_url,
-                })
+            
+            return json.dumps({
+                'status': 'success',
+                'url': url.replace('/download', ''),
+                'deletion_url': delete_url,
+            })
     elif 'text' in request.form:
         content = request.form['text']
         vanity = shortuuid.uuid()[:8]
@@ -824,9 +849,10 @@ def api_upload():
         
         url = url_for('redirect_vanity', vanity=vanity, _external=True)
         delete_url = url_for('delete_content', vanity=vanity, _external=True)
-        return jsonify({
+        
+        return json.dumps({
             'status': 'success',
-            'url': url,
+            'url': url.replace('/download', ''),
             'deletion_url': delete_url,
         })
     elif 'url' in request.form:
@@ -839,9 +865,10 @@ def api_upload():
         
         short_url = url_for('redirect_vanity', vanity=vanity, _external=True)
         delete_url = url_for('delete_content', vanity=vanity, _external=True)
-        return jsonify({
+        
+        return json.dumps({
             'status': 'success',
-            'url': short_url,
+            'url': short_url.replace('/download', ''),
             'deletion_url': delete_url,
         })
 
@@ -877,4 +904,9 @@ def create_new_file(username):
     return redirect(url_for('user_files', username=username, subpath=subpath))
 
 if __name__ == '__main__':
-    app.run(debug=True,host='0.0.0.0',port=7123)
+    # Start the cleanup thread
+    cleanup_thread = threading.Thread(target=delete_old_files)
+    cleanup_thread.daemon = True
+    cleanup_thread.start()
+
+    app.run(debug=True, host='0.0.0.0', port=7123)

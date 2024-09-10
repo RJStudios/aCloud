@@ -49,12 +49,14 @@
             {% if info.file_size %}
                 <div class="info-item"><strong>File Size:</strong> {{ info.file_size }} bytes</div>
             {% endif %}
+            <a href="{{ url_for('redirect_vanity', vanity=info.vanity)|replace('/download', '') }}" class="btn">View/Embed</a>
+            <a href="{{ url_for('redirect_vanity', vanity=info.vanity) ~ ('/download' if '/download' not in url_for('redirect_vanity', vanity=info.vanity) else '') }}" class="btn">Download</a>
         {% elif info.type == 'url' %}
             <div class="info-item"><strong>Target URL:</strong> {{ info.data }}</div>
-        {% endif %}
-        <a href="{{ url_for('redirect_vanity', vanity=info.vanity) }}" class="btn">View Content</a>
-        {% if info.type == 'file' %}
-            <a href="{{ url_for('redirect_vanity', vanity=info.vanity) }}/download" class="btn">Download</a>
+            <a href="{{ url_for('redirect_vanity', vanity=info.vanity) }}" class="btn">Visit URL</a>
+        {% elif info.type == 'pastebin' %}
+            <a href="{{ url_for('redirect_vanity', vanity=info.vanity) }}" class="btn">View Pastebin</a>
+            <a href="{{ url_for('raw_vanity', vanity=info.vanity) }}" class="btn">View Raw</a>
         {% endif %}
         {% if current_user.is_authenticated and current_user.username == info.username %}
             {% if info.type != 'file' or not info.is_media %}
