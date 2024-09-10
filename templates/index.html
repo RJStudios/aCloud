@@ -3,238 +3,739 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aCloud - File Sharing Service</title>
+    <title>aCloud - Seamless File & Text Sharing</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <style>
+        :root {
+            --primary-color: #4a90e2;
+            --secondary-color: #50c878;
+            --background-color: #121212;
+            --text-color: #ffffff;
+            --accent-color: #ff6b6b;
+            --container-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --input-focus: #3a3a3a;
+        }
+
+        body.default-dark {
+            --primary-color: #4a90e2;
+            --secondary-color: #50c878;
+            --background-color: #121212;
+            --text-color: #ffffff;
+            --accent-color: #ff6b6b;
+            --container-bg: #1e1e1e;
+            --input-bg: #2a2a2a;
+            --input-focus: #3a3a3a;
+        }
+
+        body.default-light {
+            --primary-color: #4a90e2;
+            --secondary-color: #50c878;
+            --background-color: #f0f0f0;
+            --text-color: #333333;
+            --accent-color: #ff6b6b;
+            --container-bg: #ffffff;
+            --input-bg: #e0e0e0;
+            --input-focus: #d0d0d0;
+        }
+
+        body.pink-dark {
+            --primary-color: #ff69b4;
+            --secondary-color: #ffc0cb;
+            --background-color: #4a0e1c;
+            --text-color: #ffffff;
+            --accent-color: #db7093;
+            --container-bg: #69142c;
+            --input-bg: #8b1a3a;
+            --input-focus: #ad2148;
+        }
+
+        body.pink-light {
+            --primary-color: #ff69b4;
+            --secondary-color: #ffc0cb;
+            --background-color: #ffe4e1;
+            --text-color: #4a0e1c;
+            --accent-color: #db7093;
+            --container-bg: #fff0f5;
+            --input-bg: #ffd1dc;
+            --input-focus: #ffb6c1;
+        }
+
+        body.red-dark {
+            --primary-color: #ff0000;
+            --secondary-color: #ff6347;
+            --background-color: #8b0000;
+            --text-color: #ffffff;
+            --accent-color: #dc143c;
+            --container-bg: #b22222;
+            --input-bg: #cd5c5c;
+            --input-focus: #ff4500;
+        }
+
+        body.red-light {
+            --primary-color: #ff0000;
+            --secondary-color: #ff6347;
+            --background-color: #fff5f5;
+            --text-color: #8b0000;
+            --accent-color: #dc143c;
+            --container-bg: #ffebeb;
+            --input-bg: #ffd5d5;
+            --input-focus: #ffbfbf;
+        }
+
+        body.black-dark {
+            --primary-color: #ffffff;
+            --secondary-color: #808080;
+            --background-color: #000000;
+            --text-color: #ffffff;
+            --accent-color: #c0c0c0;
+            --container-bg: #1a1a1a;
+            --input-bg: #2c2c2c;
+            --input-focus: #3d3d3d;
+        }
+
+        body.black-light {
+            --primary-color: #000000;
+            --secondary-color: #404040;
+            --background-color: #f0f0f0;
+            --text-color: #000000;
+            --accent-color: #808080;
+            --container-bg: #ffffff;
+            --input-bg: #e0e0e0;
+            --input-focus: #d0d0d0;
+        }
+
+        body.gray-dark {
+            --primary-color: #a9a9a9;
+            --secondary-color: #d3d3d3;
+            --background-color: #696969;
+            --text-color: #f5f5f5;
+            --accent-color: #dcdcdc;
+            --container-bg: #808080;
+            --input-bg: #a0a0a0;
+            --input-focus: #b8b8b8;
+        }
+
+        body.gray-light {
+            --primary-color: #696969;
+            --secondary-color: #a9a9a9;
+            --background-color: #f5f5f5;
+            --text-color: #333333;
+            --accent-color: #808080;
+            --container-bg: #ffffff;
+            --input-bg: #e0e0e0;
+            --input-focus: #d0d0d0;
+        }
+
+        body.blue-dark {
+            --primary-color: #1e90ff;
+            --secondary-color: #87cefa;
+            --background-color: #00008b;
+            --text-color: #f0f8ff;
+            --accent-color: #4169e1;
+            --container-bg: #4682b4;
+            --input-bg: #6495ed;
+            --input-focus: #00bfff;
+        }
+
+        body.blue-light {
+            --primary-color: #1e90ff;
+            --secondary-color: #87cefa;
+            --background-color: #f0f8ff;
+            --text-color: #00008b;
+            --accent-color: #4169e1;
+            --container-bg: #e6f2ff;
+            --input-bg: #cce6ff;
+            --input-focus: #b3d9ff;
+        }
+
+        body.green-dark {
+            --primary-color: #32cd32;
+            --secondary-color: #90ee90;
+            --background-color: #006400;
+            --text-color: #f0fff0;
+            --accent-color: #00fa9a;
+            --container-bg: #228b22;
+            --input-bg: #3cb371;
+            --input-focus: #00ff7f;
+        }
+
+        body.green-light {
+            --primary-color: #32cd32;
+            --secondary-color: #90ee90;
+            --background-color: #f0fff0;
+            --text-color: #006400;
+            --accent-color: #00fa9a;
+            --container-bg: #e6ffe6;
+            --input-bg: #ccffcc;
+            --input-focus: #b3ffb3;
+        }
+
+        body.purple-dark {
+            --primary-color: #8a2be2;
+            --secondary-color: #dda0dd;
+            --background-color: #4b0082;
+            --text-color: #e6e6fa;
+            --accent-color: #9370db;
+            --container-bg: #663399;
+            --input-bg: #9932cc;
+            --input-focus: #ba55d3;
+        }
+
+        body.purple-light {
+            --primary-color: #8a2be2;
+            --secondary-color: #dda0dd;
+            --background-color: #f8f0ff;
+            --text-color: #4b0082;
+            --accent-color: #9370db;
+            --container-bg: #f0e6ff;
+            --input-bg: #e6ccff;
+            --input-focus: #d9b3ff;
+        }
+
+        body.orange-dark {
+            --primary-color: #ffa500;
+            --secondary-color: #ffd700;
+            --background-color: #ff8c00;
+            --text-color: #fffaf0;
+            --accent-color: #ff4500;
+            --container-bg: #ff7f50;
+            --input-bg: #ffa07a;
+            --input-focus: #ffb347;
+        }
+
+        body.orange-light {
+            --primary-color: #ffa500;
+            --secondary-color: #ffd700;
+            --background-color: #fffaf0;
+            --text-color: #ff8c00;
+            --accent-color: #ff4500;
+            --container-bg: #fff5e6;
+            --input-bg: #ffebcc;
+            --input-focus: #ffe0b3;
+        }
+
+        body.teal-dark {
+            --primary-color: #008080;
+            --secondary-color: #20b2aa;
+            --background-color: #005353;
+            --text-color: #e0ffff;
+            --accent-color: #40e0d0;
+            --container-bg: #008b8b;
+            --input-bg: #48d1cc;
+            --input-focus: #00ced1;
+        }
+
+        body.teal-light {
+            --primary-color: #008080;
+            --secondary-color: #20b2aa;
+            --background-color: #e0ffff;
+            --text-color: #005353;
+            --accent-color: #40e0d0;
+            --container-bg: #f0ffff;
+            --input-bg: #e0ffff;
+            --input-focus: #d0ffff;
+        }
+
+        body.yellow-dark {
+            --primary-color: #ffd700;
+            --secondary-color: #ffff00;
+            --background-color: #8b8000;
+            --text-color: #fffacd;
+            --accent-color: #daa520;
+            --container-bg: #b8860b;
+            --input-bg: #f0e68c;
+            --input-focus: #eee8aa;
+        }
+
+        body.yellow-light {
+            --primary-color: #ffd700;
+            --secondary-color: #ffff00;
+            --background-color: #fffacd;
+            --text-color: #8b8000;
+            --accent-color: #daa520;
+            --container-bg: #fff8dc;
+            --input-bg: #fffacd;
+            --input-focus: #fff5e6;
+        }
+
+        body.brown-dark {
+            --primary-color: #8b4513;
+            --secondary-color: #d2691e;
+            --background-color: #3e2723;
+            --text-color: #deb887;
+            --accent-color: #cd853f;
+            --container-bg: #5d4037;
+            --input-bg: #795548;
+            --input-focus: #8d6e63;
+        }
+
+        body.brown-light {
+            --primary-color: #8b4513;
+            --secondary-color: #d2691e;
+            --background-color: #f5e6d3;
+            --text-color: #3e2723;
+            --accent-color: #cd853f;
+            --container-bg: #fff5e6;
+            --input-bg: #ffe4b5;
+            --input-focus: #ffdab9;
+        }
+
+        body.solarized-dark {
+        --primary-color: #b58900;
+        --secondary-color: #859900;
+        --background-color: #002b36;
+        --text-color: #839496;
+        --accent-color: #cb4b16;
+        --container-bg: #073642;
+        --input-bg: #094352;
+        --input-focus: #0b5365;
+    }
         body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
+            font-family: 'Poppins', sans-serif;
             margin: 0;
             padding: 0;
+            background-color: var(--background-color);
+            color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            background-color: #1a1a1a;
-            color: #f0f0f0;
+            line-height: 1.6;
+            transition: all 0.3s ease;
         }
+
         .container {
             flex: 1;
+            max-width: 1200px;
+            width: 95%;
+            margin: 1rem auto;
+            padding: 1rem;
+            background-color: var(--container-bg);
+            border-radius: 20px;
+            box-shadow: 0 0 30px rgba(74, 144, 226, 0.1);
+        }
+
+        .header {
             display: flex;
-            flex-direction: column;
+            justify-content: space-between;
             align-items: center;
-            justify-content: center;
-            padding: 20px;
+            margin-bottom: 1rem;
         }
-        nav {
-            margin-bottom: 20px;
+
+        .logo {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
         }
-        nav a {
-            color: #4CAF50;
-            text-decoration: none;
-            margin: 0 10px;
+
+        .auth-buttons {
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
         }
-        .upload-options {
-            margin-bottom: 20px;
-        }
-        .upload-options button {
-            background-color: #4CAF50;
+
+        .btn {
+            padding: 0.5rem 1rem;
             border: none;
-            color: white;
-            padding: 10px 20px;
-            text-align: center;
-            text-decoration: none;
-            display: inline-block;
-            font-size: 16px;
-            margin: 4px 2px;
+            border-radius: 25px;
+            font-weight: 600;
             cursor: pointer;
-            border-radius: 4px;
+            transition: all 0.3s ease;
+            font-size: 0.9rem;
+            text-transform: uppercase;
         }
+
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: var(--background-color);
+        }
+
+        .btn-secondary {
+            background-color: var(--secondary-color);
+            color: var(--background-color);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .hero h1 {
+            font-size: 3rem;
+            margin-bottom: 0.5rem;
+            color: var(--primary-color);
+            text-shadow: 0 0 20px var(--primary-color);
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            color: var(--text-color);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .upload-section {
+            background-color: var(--input-bg);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin-bottom: 1.5rem;
+        }
+
+        .upload-options {
+            display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
         .upload-form {
             display: none;
-            background-color: #2a2a2a;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 400px;
-            width: 100%;
         }
+
         .upload-form.active {
             display: block;
+            animation: fadeIn 0.3s ease-in-out;
         }
-        .upload-form input[type="text"],
-        .upload-form input[type="file"],
-        .upload-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            border: 1px solid #4CAF50;
-            background-color: #333;
-            color: #f0f0f0;
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
         }
-        .upload-form button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 0.4rem;
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+
+        .form-group input[type="text"],
+        .form-group textarea {
+            width: calc(100% - 20px);
+            padding: 0.7rem;
+            border: 2px solid var(--input-focus);
+            border-radius: 10px;
+            font-size: 0.9rem;
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .form-group input[type="text"]:focus,
+        .form-group textarea:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        .file-input-container {
+            background-color: var(--container-bg);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            overflow: hidden;
+            display: inline-block;
             cursor: pointer;
         }
-        .result {
-            margin-top: 10px;
-            color: #4CAF50;
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            left: 0;
+            top: 0;
+            opacity: 0;
+            cursor: pointer;
         }
-        .footer {
-            text-align: center;
-            padding: 10px;
-            background-color: #2a2a2a;
-            color: #f0f0f0;
-        }
-        .typewriter-container {
-            font-family: monospace;
-            white-space: pre-wrap;
-            overflow: hidden;
-            font-size: 1.2em;
-            margin-bottom: 20px;
-        }
-        .cursor {
+
+        .file-input-wrapper .btn {
             display: inline-block;
-            width: 10px;
-            height: 20px;
-            background-color: #4CAF50;
-            animation: blink 0.7s infinite;
+            padding: 0.6rem 1.2rem;
+            background-color: var(--accent-color);
+            color: var(--background-color);
+            border-radius: 25px;
+            font-weight: 600;
+            transition: all 0.3s ease;
         }
-        @keyframes blink {
-            0% { opacity: 0; }
-            50% { opacity: 1; }
-            100% { opacity: 0; }
+
+        .file-input-wrapper:hover .btn {
+            background-color: #ff8c8c;
         }
+
+        .file-name {
+            margin-left: 10px;
+            font-size: 0.9rem;
+            color: var(--accent-color);
+        }
+
+        .result {
+            margin-top: 1rem;
+            padding: 0.8rem;
+            background-color: var(--secondary-color);
+            color: var(--background-color);
+            border-radius: 10px;
+            text-align: center;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        footer {
+            background-color: var(--container-bg);
+            color: var(--text-color);
+            text-align: center;
+            padding: 1rem;
+            margin-top: 1rem;
+            font-size: 0.9rem;
+            border-radius: 0 0 20px 20px;
+        }
+
+        footer a {
+            color: var(--accent-color);
+            text-decoration: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        footer a:hover {
+            color: var(--primary-color);
+            text-shadow: 0 0 10px var(--primary-color);
+        }
+
+        .settings-icon {
+            cursor: pointer;
+            font-size: 1.5rem;
+            color: var(--primary-color);
+            transition: all 0.3s ease;
+        }
+
+        .settings-icon:hover {
+            color: var(--accent-color);
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 0.5rem;
+            }
+
+            .hero h1 {
+                font-size: 2rem;
+            }
+
+            .hero p {
+                font-size: 1rem;
+            }
+
+            .upload-options {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+   .settings-dropdown {
+        display: none;
+        position: absolute;
+        right: 20px;
+        top: 60px;
+        background-color: var(--container-bg);
+        border-radius: 10px;
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+        z-index: 1000;
+    }
+
+    .settings-dropdown.show {
+        display: flex;
+    }
+
+    .theme-column {
+        width: 50%;
+    }
+
+    .theme-option {
+        padding: 10px 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+    }
+
+    .theme-option:hover {
+        background-color: var(--input-bg);
+    }
+
+    .theme-category {
+        font-weight: bold;
+        padding: 10px 20px;
+        background-color: var(--input-bg);
+        color: var(--accent-color);
+    }
     </style>
 </head>
-<body>
+<body class="default">
     <div class="container">
-        <nav>
-            <a href="{{ url_for('login') }}">Login</a>
-            <a href="{{ url_for('register') }}">Register</a>
-        </nav>
+        <header class="header">
+            <div class="logo">aCloud</div>
+            <div class="auth-buttons">
+                <button class="btn btn-primary">Login</button>
+                <button class="btn btn-secondary">Register</button>
+                <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
+            </div>
+        </header>
 
-        <div class="typewriter-container">
-            <span id="typewriter-text"></span><span id="cursor" class="cursor"></span>
+        <div class="settings-dropdown" id="settingsDropdown">
+            <div class="theme-column">
+                <div class="theme-category">Dark Themes</div>
+                <div class="theme-option" onclick="changeTheme('default-dark')">Default Dark</div>
+                <div class="theme-option" onclick="changeTheme('pink-dark')">Pink Dark</div>
+                <div class="theme-option" onclick="changeTheme('black-dark')">Black Dark</div>
+                <div class="theme-option" onclick="changeTheme('gray-dark')">Gray Dark</div>
+                <div class="theme-option" onclick="changeTheme('blue-dark')">Blue Dark</div>
+                <div class="theme-option" onclick="changeTheme('green-dark')">Green Dark</div>
+                <div class="theme-option" onclick="changeTheme('purple-dark')">Purple Dark</div>
+                <div class="theme-option" onclick="changeTheme('yellow-dark')">Yellow Dark</div>
+                <div class="theme-option" onclick="changeTheme('brown-dark')">Brown Dark</div>
+                <div class="theme-option" onclick="changeTheme('solarized-dark')">Solarized Dark</div>
+            </div>
+            <div class="theme-column">
+                <div class="theme-category">Light Themes</div>
+                <div class="theme-option" onclick="changeTheme('default-light')">Default Light</div>
+                <div class="theme-option" onclick="changeTheme('pink-light')">Pink Light</div>
+                <div class="theme-option" onclick="changeTheme('red-light')">Red Light</div>
+                <div class="theme-option" onclick="changeTheme('black-light')">Black Light</div>
+                <div class="theme-option" onclick="changeTheme('gray-light')">Gray Light</div>
+                <div class="theme-option" onclick="changeTheme('blue-light')">Blue Light</div>
+                <div class="theme-option" onclick="changeTheme('green-light')">Green Light</div>
+                <div class="theme-option" onclick="changeTheme('purple-light')">Purple Light</div>
+                <div class="theme-option" onclick="changeTheme('orange-light')">Orange Light</div>
+                <div class="theme-option" onclick="changeTheme('teal-light')">Teal Light</div>
+                <div class="theme-option" onclick="changeTheme('brown-light')">Brown Light</div>
+            </div>
         </div>
 
-        <div class="upload-options">
-            <button onclick="showForm('text')">Upload Text</button>
-            <button onclick="showForm('file')">Upload File</button>
-            <button onclick="showForm('folder')">Upload Folder</button>
-            <button onclick="showForm('url')">Shorten URL</button>
-        </div>
-        <div id="uploadFormContainer">
+
+        <script>
+            function toggleSettingsDropdown() {
+                const dropdown = document.getElementById('settingsDropdown');
+                dropdown.classList.toggle('show');
+            }
+            
+            function changeTheme(theme) {
+                document.body.className = theme;
+                localStorage.setItem('theme', theme);
+                toggleSettingsDropdown();
+            }
+            
+            document.addEventListener('DOMContentLoaded', function() {
+                const settingsIcon = document.getElementById('settingsIcon');
+                settingsIcon.addEventListener('click', toggleSettingsDropdown);
+            
+                const savedTheme = localStorage.getItem('theme');
+                if (savedTheme) {
+                    document.body.className = savedTheme;
+                } else {
+                    document.body.className = 'default-dark'; 
+                }
+            
+                document.addEventListener('click', function(event) {
+                    const dropdown = document.getElementById('settingsDropdown');
+                    const settingsIcon = document.getElementById('settingsIcon');
+                    if (!dropdown.contains(event.target) && event.target !== settingsIcon) {
+                        dropdown.classList.remove('show');
+                    }
+                });
+            });
+        </script>
+
+        <section class="hero">
+            <h1>Effortless File & Text Sharing</h1>
+            <p>Experience the simplicity of seamless, secure, and swift file sharing with aCloud.</p>
+        </section>
+
+        <section class="upload-section">
+            <div class="upload-options">
+                <button class="btn btn-primary" onclick="showForm('text')">Share Text</button>
+                <button class="btn btn-primary" onclick="showForm('file')">Upload File</button>
+                <button class="btn btn-primary" onclick="showForm('folder')">Upload Folder</button>
+                <button class="btn btn-primary" onclick="showForm('url')">Shorten URL</button>
+            </div>
+
             <div id="textForm" class="upload-form">
-                <h2>Upload Text</h2>
-                <form>
-                    <textarea name="content" rows="4" placeholder="Enter text here..."></textarea>
-                    <button type="button" onclick="uploadText()">Upload Text</button>
-                </form>
+                <h2>Share Your Text</h2>
+                <div class="form-group">
+                    <label for="textContent">Enter your text:</label>
+                    <textarea id="textContent" rows="4" placeholder="Type your message here..."></textarea>
+                </div>
+                <button class="btn btn-secondary" onclick="uploadText()">Share Now</button>
                 <div id="textResult" class="result"></div>
             </div>
+
             <div id="fileForm" class="upload-form">
-                <h2>Upload File</h2>
-                <form enctype="multipart/form-data">
-                    <input type="file" name="file" />
-                    <button type="button" onclick="uploadFile()">Upload File</button>
-                </form>
+                <h2>Upload Your File</h2>
+                <div class="file-input-container">
+                    <div class="form-group">
+                        <label for="fileInput">Choose your file:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="fileInput" onchange="updateFileName(this, 'fileInputLabel')">
+                            <span class="btn">Select File</span>
+                        </div>
+                        <span id="fileInputLabel" class="file-name">No file selected</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="uploadFile()">Upload Now</button>
                 <div id="fileResult" class="result"></div>
             </div>
+
             <div id="folderForm" class="upload-form">
-                <h2>Upload Folder</h2>
-                <form enctype="multipart/form-data">
-                    <input type="file" name="file" webkitdirectory directory />
-                    <button type="button" onclick="uploadFolder()">Upload Folder</button>
-                </form>
+                <h2>Upload Your Folder</h2>
+                <div class="file-input-container">
+                    <div class="form-group">
+                        <label for="folderInput">Choose your folder:</label>
+                        <div class="file-input-wrapper">
+                            <input type="file" id="folderInput" webkitdirectory directory multiple onchange="updateFileName(this, 'folderInputLabel')">
+                            <span class="btn">Select Folder</span>
+                        </div>
+                        <span id="folderInputLabel" class="file-name">No folder selected</span>
+                    </div>
+                </div>
+                <button class="btn btn-secondary" onclick="uploadFolder()">Upload Now</button>
                 <div id="folderResult" class="result"></div>
             </div>
+
             <div id="urlForm" class="upload-form">
-                <h2>Shorten URL</h2>
-                <form>
-                    <input type="text" name="url" placeholder="Enter URL here..." />
-                    <button type="button" onclick="shortenUrl()">Shorten URL</button>
-                </form>
+                <h2>Shorten Your URL</h2>
+                <div class="form-group">
+                    <label for="urlInput">Enter your long URL:</label>
+                    <input type="text" id="urlInput" placeholder="https://example.com/very/long/url">
+                </div>
+                <button class="btn btn-secondary" onclick="shortenUrl()">Shorten Now</button>
                 <div id="urlResult" class="result"></div>
             </div>
-        </div>
+        </section>
     </div>
 
-    <footer class="footer">
-        <p>Source code available on: 
-            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub (not up-to-date)</a> | 
-            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git (main)</a>
+    <footer>
+        <p>aCloud - Simplifying File Sharing | 
+            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub</a> | 
+            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a>
         </p>
     </footer>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        const message1 = "Welcome to aCloud.";
-        const message2 = "\n A simple toolbox for file uploading,\n URL shortening and pastebin.";
-        const typewriterTextElement = document.getElementById('typewriter-text');
-        const cursorElement = document.getElementById('cursor');
-        const typingSpeed = 70;
-
-        function typeMessage(message, callback) {
-            let index = 0;
-
-            function typeCharacter() {
-                if (index < message.length) {
-                    if (message[index] === '\n') {
-                        typewriterTextElement.innerHTML += '<br>';
-                    } else {
-                        typewriterTextElement.innerHTML += message[index]; 
-                    }
-                    index++;
-                    updateCursorPosition(); 
-                    setTimeout(typeCharacter, typingSpeed);
-                } else if (callback) {
-                    setTimeout(callback, typingSpeed);
-                }
-            }
-
-            typeCharacter();
-        }
-
-        function updateCursorPosition() {
-
-            const textRect = typewriterTextElement.getBoundingClientRect();
-            cursorElement.style.left = (textRect.width + textRect.left - cursorElement.offsetWidth) + 'px';
-        }
-
-        typeMessage(message1, function() {
-            typeMessage(message2);
-        });
-    });;
-
-
-    document.getElementById('uploadForm').onsubmit = function(e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/upload/file', true);
-
-        xhr.upload.onprogress = function(e) {
-            if (e.lengthComputable) {
-                var percentComplete = (e.loaded / e.total) * 100;
-                document.getElementById('progressBar').style.display = 'block';
-                document.getElementById('progressBar').value = percentComplete;
-            }
-        };
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                alert('Upload complete!');
-                document.getElementById('progressBar').style.display = 'none';
-            } else {
-                alert('Upload failed.');
-            }
-        };
-        xhr.send(formData);
-    };
-
     function showForm(type) {
         document.querySelectorAll('.upload-form').forEach(form => {
             form.classList.remove('active');
@@ -242,8 +743,21 @@
         document.getElementById(type + 'Form').classList.add('active');
     }
 
+    function updateFileName(input, labelId) {
+        const label = document.getElementById(labelId);
+        if (input.files.length > 0) {
+            if (input.files.length === 1) {
+                label.textContent = input.files[0].name;
+            } else {
+                label.textContent = `${input.files.length} files selected`;
+            }
+        } else {
+            label.textContent = input.getAttribute('webkitdirectory') !== null ? 'No folder selected' : 'No file selected';
+        }
+    }
+
     function uploadText() {
-        const content = document.querySelector('#textForm textarea').value;
+        const content = document.getElementById('textContent').value;
         fetch('/upload/pastebin', {
             method: 'POST',
             headers: {
@@ -253,25 +767,25 @@
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('textResult').innerHTML = `Text uploaded. Access it <a href="/${data.vanity}">here</a>.`;
+            document.getElementById('textResult').innerHTML = `Text shared successfully! Access it <a href="/${data.vanity}">here</a>.`;
         });
     }
 
     function uploadFile() {
         const formData = new FormData();
-        formData.append('file', document.querySelector('#fileForm input[type="file"]').files[0]);
+        formData.append('file', document.getElementById('fileInput').files[0]);
         fetch('/upload/file', {
             method: 'POST',
             body: formData,
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('fileResult').innerHTML = `File uploaded. Download it <a href="/download/${data.vanity}">here</a>.`;
+            document.getElementById('fileResult').innerHTML = `File uploaded successfully! Download it <a href="/download/${data.vanity}">here</a>.`;
         });
     }
 
     function uploadFolder() {
-        const files = document.querySelector('#folderForm input[type="file"]').files;
+        const files = document.getElementById('folderInput').files;
         if (files.length === 0) {
             alert('Please select a folder.');
             return;
@@ -293,7 +807,7 @@
     }
 
     function shortenUrl() {
-        const url = document.querySelector('#urlForm input[name="url"]').value;
+        const url = document.getElementById('urlInput').value;
         fetch('/shorten', {
             method: 'POST',
             headers: {
@@ -306,7 +820,6 @@
             document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="/${data.vanity}">here</a>.`;
         });
     }
-    </script>
+</script>
 </body>
-
 </html>
