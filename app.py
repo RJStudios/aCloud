@@ -37,9 +37,22 @@ def get_db():
 def init_db():
     with app.app_context():
         db = get_db()
-        with app.open_resource('schema.sql', mode='r') as f:
-            db.cursor().executescript(f.read())
-        db.commit()
+        cursor = db.cursor()
+        
+        # Check if users table exists
+        cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='users'")
+        if not cursor.fetchone():
+            # If it doesn't exist, create it
+            with app.open_resource('schema.sql', mode='r') as f:
+                db.cursor().executescript(f.read())
+            db.commit()
+            print("Database initialized with users table.")
+        else:
+            print("Users table already exists.")
+
+# Call init_db() when the application starts
+with app.app_context():
+    init_db()
 
 def migrate_db():
     db = get_db()
@@ -53,10 +66,6 @@ def migrate_db():
         print("Adding api_key column to users table")
         cursor.execute("ALTER TABLE users ADD COLUMN api_key TEXT")
         db.commit()
-
-# Call this function after init_db()
-init_db()
-migrate_db()
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -315,25 +324,19 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        form = RegistrationForm(username, password)
+        api_key = User.generate_api_key()  # Generate API key
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ?", (form.username,))
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
             return "Username already exists"
-        hashed_password = User.hash_password(form.password)
-        api_key = User.generate_api_key()
-        try:
-            cursor.execute("INSERT INTO users (username, password_hash, api_key) VALUES (?, ?, ?)",
-                           (form.username, hashed_password, api_key))
-        except sqlite3.OperationalError:
-            # If api_key column doesn't exist, insert without it
-            cursor.execute("INSERT INTO users (username, password_hash) VALUES (?, ?)",
-                           (form.username, hashed_password))
+        hashed_password = User.hash_password(password)
+        cursor.execute("INSERT INTO users (username, password_hash, api_key) VALUES (?, ?, ?)",
+                       (username, hashed_password, api_key))
         db.commit()
         
         # Create user directory
-        user_folder = os.path.join(app.config['UPLOAD_FOLDER'], form.username)
+        user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
         
