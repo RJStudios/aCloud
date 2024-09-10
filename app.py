@@ -764,7 +764,7 @@ def content_info(vanity):
 @app.route('/sharex-config')
 @login_required
 def generate_sharex_config():
-    base_url = request.url_root.rstrip('/')
+    base_url = request.url_root.replace('http://', 'https://', 1).rstrip('/')
     config = {
         "Version": "13.7.0",
         "Name": "aCloud",
@@ -818,8 +818,8 @@ def api_upload():
                                (vanity, 'pastebin', content, datetime.now(), user[0]))
                 db.commit()
                 
-                url = url_for('redirect_vanity', vanity=vanity, _external=True)
-                delete_url = url_for('delete_content', vanity=vanity, _external=True)
+                url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+                delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
             else:
                 # Handle other file types
                 vanity = shortuuid.uuid()[:8]
@@ -831,8 +831,8 @@ def api_upload():
                                (new_filename, 'file', new_filename, datetime.now(), user[0]))
                 db.commit()
                 
-                url = url_for('redirect_vanity', vanity=new_filename, _external=True)
-                delete_url = url_for('delete_content', vanity=new_filename, _external=True)
+                url = url_for('redirect_vanity', vanity=new_filename, _external=True, _scheme='https')
+                delete_url = url_for('delete_content', vanity=new_filename, _external=True, _scheme='https')
             
             return json.dumps({
                 'status': 'success',
@@ -847,8 +847,8 @@ def api_upload():
                        (vanity, 'pastebin', content, datetime.now(), user[0]))
         db.commit()
         
-        url = url_for('redirect_vanity', vanity=vanity, _external=True)
-        delete_url = url_for('delete_content', vanity=vanity, _external=True)
+        url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
         
         return json.dumps({
             'status': 'success',
@@ -863,8 +863,8 @@ def api_upload():
                        (vanity, 'url', long_url, datetime.now(), user[0]))
         db.commit()
         
-        short_url = url_for('redirect_vanity', vanity=vanity, _external=True)
-        delete_url = url_for('delete_content', vanity=vanity, _external=True)
+        short_url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
         
         return json.dumps({
             'status': 'success',
@@ -874,7 +874,7 @@ def api_upload():
 
     return jsonify({'error': 'No file, text, or URL content provided'}), 400
 
-@app.route('/dash/<username>/create_file', methods=['POST'])
+@app.route('/dash/<username>/create_new_file', methods=['POST'])
 @login_required
 def create_new_file(username):
     if current_user.username != username:
@@ -882,25 +882,12 @@ def create_new_file(username):
     subpath = request.form.get('subpath', '').rstrip('/')
     file_name = secure_filename(request.form['file_name'])
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath, file_name)
-    
-    if not os.path.exists(os.path.dirname(file_path)):
-        os.makedirs(os.path.dirname(file_path))
-    
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
-            f.write('')  # Create an empty file
-        
-        # Add the file to the content database
-        db = get_db()
-        cursor = db.cursor()
-        vanity = shortuuid.uuid()[:8]
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity, 'file', os.path.join(subpath, file_name), datetime.now(), current_user.id))
-        db.commit()
-        flash('File created successfully.', 'success')
+            f.write('')
+        flash(f"File '{file_name}' created successfully.", 'success')
     else:
-        flash('File already exists.', 'error')
-    
+        flash(f"File '{file_name}' already exists.", 'error')
     return redirect(url_for('user_files', username=username, subpath=subpath))
 
 if __name__ == '__main__':
@@ -909,4 +896,89 @@ if __name__ == '__main__':
     cleanup_thread.daemon = True
     cleanup_thread.start()
 
-    app.run(debug=True, host='0.0.0.0', port=7123)
+    app.run(host='0.0.0.0', port=7123, debug=True)
+def api_upload():
+    api_key = request.headers.get('X-API-Key')
+    if not api_key:
+        return jsonify({'error': 'API key is missing'}), 401
+
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM users WHERE api_key = ?", (api_key,))
+    user = cursor.fetchone()
+
+    if not user:
+        return jsonify({'error': 'Invalid API key'}), 401
+
+    if 'file' in request.files:
+        file = request.files['file']
+        if file.filename == '':
+            return jsonify({'error': 'No selected file'}), 400
+        if file:
+            filename = secure_filename(file.filename)
+            extension = os.path.splitext(filename)[1].lower()
+            
+            if extension == '.txt':
+                # Handle text files as pastebins
+                content = file.read().decode('utf-8')
+                vanity = shortuuid.uuid()[:8]
+                
+                cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
+                               (vanity, 'pastebin', content, datetime.now(), user[0]))
+                db.commit()
+                
+                url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+                delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
+            else:
+                # Handle other file types
+                vanity = shortuuid.uuid()[:8]
+                new_filename = f"{vanity}{extension}"
+                file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
+                file.save(file_path)
+                
+                cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
+                               (new_filename, 'file', new_filename, datetime.now(), user[0]))
+                db.commit()
+                
+                url = url_for('redirect_vanity', vanity=new_filename, _external=True, _scheme='https')
+                delete_url = url_for('delete_content', vanity=new_filename, _external=True, _scheme='https')
+            
+            return json.dumps({
+                'status': 'success',
+                'url': url.replace('/download', ''),
+                'deletion_url': delete_url,
+            })
+    elif 'text' in request.form:
+        content = request.form['text']
+        vanity = shortuuid.uuid()[:8]
+        
+        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
+                       (vanity, 'pastebin', content, datetime.now(), user[0]))
+        db.commit()
+        
+        url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
+        
+        return json.dumps({
+            'status': 'success',
+            'url': url.replace('/download', ''),
+            'deletion_url': delete_url,
+        })
+    elif 'url' in request.form:
+        long_url = request.form['url']
+        vanity = shortuuid.uuid()[:8]
+        
+        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
+                       (vanity, 'url', long_url, datetime.now(), user[0]))
+        db.commit()
+        
+        short_url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
+        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
+        
+        return json.dumps({
+            'status': 'success',
+            'url': short_url.replace('/download', ''),
+            'deletion_url': delete_url,
+        })
+
+    return jsonify({'error': 'No file, text, or URL content provided'}), 400
