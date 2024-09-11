@@ -107,6 +107,61 @@
         .tab-content.active {
             display: block;
         }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .modal-input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid #4CAF50;
+            background-color: #333;
+            color: #f0f0f0;
+        }
+        .modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+        .file-list {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .file-item {
+            border-radius: 0;
+            margin-bottom: 0;
+            border-bottom: 1px solid #3a3a3a;
+        }
+        .file-item:last-child {
+            border-bottom: none;
+        }
+        .file-actions .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
     </style>
 </head>
 <body>
@@ -145,19 +200,10 @@
                 <input type="submit" value="Upload" class="btn">
             </form>
 
-            <h3>Create Folder</h3>
-            <form action="{{ url_for('create_folder', username=username) }}" method="post">
-                <input type="hidden" name="subpath" value="{{ current_path }}">
-                <input type="text" name="folder_name" placeholder="New folder name" required>
-                <input type="submit" value="Create Folder" class="btn">
-            </form>
-
-            <h3>Create New File</h3>
-            <form action="{{ url_for('create_new_file', username=username) }}" method="post">
-                <input type="hidden" name="subpath" value="{{ current_path }}">
-                <input type="text" name="file_name" placeholder="New file name (e.g., index.html)" required>
-                <input type="submit" value="Create File" class="btn">
-            </form>
+            <div class="action-buttons">
+                <button onclick="showModal('createFolder')" class="btn">Create Folder</button>
+                <button onclick="showModal('createFile')" class="btn">Create File</button>
+            </div>
 
             <h3>Files and Folders</h3>
             <p style="text-align: center;">Current folder: {{ current_folder or 'Root' }}</p>
@@ -169,9 +215,6 @@
                     <span class="file-name">
                         <a href="{{ url_for('user_files', username=username, subpath=parent_folder) }}">..</a>
                     </span>
-                    <div class="file-actions">
-                        <!-- No actions for parent directory -->
-                    </div>
                 </li>
             {% endif %}
             {% for item in items %}
@@ -185,10 +228,10 @@
                         {% endif %}
                     </span>
                     <div class="file-actions">
+                        <button onclick="showModal('rename', '{{ item.name }}', '{{ item.type }}')" class="btn">Rename</button>
+                        <button onclick="showModal('move', '{{ item.name }}', '{{ item.type }}')" class="btn">Move</button>
+                        <button onclick="showModal('copy', '{{ item.name }}', '{{ item.type }}')" class="btn">Copy</button>
                         <button onclick="deleteItem('{{ item.name }}', '{{ item.type }}')" class="btn">Delete</button>
-                        <button onclick="renameItem('{{ item.name }}', '{{ item.type }}')" class="btn">Rename</button>
-                        <button onclick="moveItem('{{ item.name }}', '{{ item.type }}')" class="btn">Move</button>
-                        <button onclick="copyItem('{{ item.name }}', '{{ item.type }}')" class="btn">Copy</button>
                         {% if item.type == 'file' %}
                             <a href="{{ url_for('edit_file', username=username, filename=item.path) }}" class="btn">Edit</a>
                         {% endif %}
@@ -234,6 +277,36 @@
             <h3>ShareX Configuration</h3>
             <p>Click the button below to download your ShareX configuration file:</p>
             <a href="{{ url_for('generate_sharex_config') }}" class="btn" download="aCloud_ShareX.sxcu">Download ShareX Config</a>
+        </div>
+    </div>
+
+    <div id="customModal" class="modal">
+        <div class="modal-content">
+            <h3 id="modalTitle"></h3>
+            <input type="text" id="modalInput" class="modal-input">
+            <div class="modal-buttons">
+                <button onclick="closeModal()" class="btn" style="background-color: #888;">Cancel</button>
+                <button onclick="handleModalAction()" class="btn" style="background-color: #4CAF50;">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="folderNavigationModal" class="modal">
+        <div class="modal-content" style="width: 80%; max-width: 600px;">
+            <h3 id="folderNavigationTitle"></h3>
+            <div id="currentPath" style="margin-bottom: 10px;"></div>
+            <div id="folderList" style="max-height: 300px; overflow-y: auto; margin-bottom: 10px;"></div>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <button onclick="showNewFolderInput()" class="btn" style="background-color: #4CAF50;">New Folder</button>
+            </div>
+            <div id="newFolderInputContainer" style="display: none; margin-top: 10px;">
+                <input type="text" id="newFolderInput" placeholder="Enter new folder name" style="width: 70%;">
+                <button onclick="createNewFolder()" class="btn" style="background-color: #4CAF50;">Create</button>
+            </div>
+            <div class="modal-buttons">
+                <button onclick="closeFolderNavigation()" class="btn" style="background-color: #888;">Cancel</button>
+                <button onclick="confirmFolderNavigation()" class="btn" style="background-color: #4CAF50;">OK</button>
+            </div>
         </div>
     </div>
 
@@ -286,77 +359,107 @@
             }
         }
 
-        function renameItem(name, type) {
-            const newName = prompt(`Enter new name for this ${type}:`, name);
-            if (newName && newName !== name) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = "{{ url_for('rename_user_file', username=username, subpath=current_path) }}";
-                const oldInput = document.createElement('input');
-                oldInput.type = 'hidden';
-                oldInput.name = 'old_filename';
-                oldInput.value = name;
-                const newInput = document.createElement('input');
-                newInput.type = 'hidden';
-                newInput.name = 'new_filename';
-                newInput.value = newName;
-                form.appendChild(oldInput);
-                form.appendChild(newInput);
-                document.body.appendChild(form);
-                form.submit();
+        function showModal(action, name = '', type = '') {
+            if (action === 'move' || action === 'copy') {
+                showFolderNavigation(action, name, type);
+            } else {
+                const modal = document.getElementById('customModal');
+                const title = document.getElementById('modalTitle');
+                const input = document.getElementById('modalInput');
+
+                switch (action) {
+                    case 'createFolder':
+                        title.textContent = 'Create New Folder';
+                        input.placeholder = 'Enter folder name';
+                        break;
+                    case 'createFile':
+                        title.textContent = 'Create New File';
+                        input.placeholder = 'Enter file name (with or without extension)';
+                        break;
+                    case 'rename':
+                        title.textContent = `Rename ${type}`;
+                        input.value = name;
+                        break;
+                }
+
+                modal.style.display = 'block';
+                input.focus();
+
+                window.currentAction = { action, name, type };
             }
         }
 
-        function moveItem(name, type) {
-            const destination = prompt(`Enter destination path for this ${type}:`, '/');
-            if (destination) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = "{{ url_for('move_item', username=username, subpath=current_path) }}";
-                const nameInput = document.createElement('input');
-                nameInput.type = 'hidden';
-                nameInput.name = 'item_name';
-                nameInput.value = name;
-                const typeInput = document.createElement('input');
-                typeInput.type = 'hidden';
-                typeInput.name = 'item_type';
-                typeInput.value = type;
-                const destInput = document.createElement('input');
-                destInput.type = 'hidden';
-                destInput.name = 'destination_folder';
-                destInput.value = destination;
-                form.appendChild(nameInput);
-                form.appendChild(typeInput);
-                form.appendChild(destInput);
-                document.body.appendChild(form);
-                form.submit();
-            }
+        function closeModal() {
+            const modal = document.getElementById('customModal');
+            modal.style.display = 'none';
         }
 
-        function copyItem(name, type) {
-            const destination = prompt(`Enter destination path to copy this ${type}:`, '/');
-            if (destination) {
-                const form = document.createElement('form');
-                form.method = 'POST';
-                form.action = "{{ url_for('copy_item', username=username, subpath=current_path) }}";
-                const nameInput = document.createElement('input');
-                nameInput.type = 'hidden';
-                nameInput.name = 'item_name';
-                nameInput.value = name;
-                const typeInput = document.createElement('input');
-                typeInput.type = 'hidden';
-                typeInput.name = 'item_type';
-                typeInput.value = type;
-                const destInput = document.createElement('input');
-                destInput.type = 'hidden';
-                destInput.name = 'destination_folder';
-                destInput.value = destination;
-                form.appendChild(nameInput);
-                form.appendChild(typeInput);
-                form.appendChild(destInput);
-                document.body.appendChild(form);
-                form.submit();
+        function handleModalAction() {
+            const input = document.getElementById('modalInput');
+            const value = input.value.trim();
+
+            if (!value) {
+                alert('Please enter a valid value');
+                return;
             }
+
+            switch (window.currentAction.action) {
+                case 'createFolder':
+                    createFolder(value);
+                    break;
+                case 'createFile':
+                    createFile(value);
+                    break;
+                case 'rename':
+                    renameItem(window.currentAction.name, window.currentAction.type, value);
+                    break;
+            }
+
+            closeModal();
+        }
+
+        function createFolder(name) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('create_folder', username=username) }}";
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'folder_name';
+            input.value = name;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function createFile(name) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('create_new_file', username=username) }}";
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'file_name';
+            input.value = name;
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function renameItem(oldName, type, newName) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('rename_user_file', username=username, subpath=current_path) }}";
+            const oldInput = document.createElement('input');
+            oldInput.type = 'hidden';
+            oldInput.name = 'old_filename';
+            oldInput.value = oldName;
+            const newInput = document.createElement('input');
+            newInput.type = 'hidden';
+            newInput.name = 'new_filename';
+            newInput.value = newName;
+            form.appendChild(oldInput);
+            form.appendChild(newInput);
+            document.body.appendChild(form);
+            form.submit();
         }
 
         function editUrl(vanity, currentUrl) {
@@ -414,6 +517,156 @@
                 this.checked = !this.checked;
             });
         });
+
+        let currentFolderPath = '';
+        let actionType = '';
+        let itemToMove = '';
+
+        function showFolderNavigation(action, itemName, itemType) {
+            actionType = action;
+            itemToMove = itemName;
+            currentFolderPath = '{{ current_path }}';
+            const modal = document.getElementById('folderNavigationModal');
+            const title = document.getElementById('folderNavigationTitle');
+            title.textContent = `${action} ${itemType}: ${itemName}`;
+            modal.style.display = 'block';
+            updateFolderNavigation();
+        }
+
+        function updateFolderNavigation() {
+            const currentPathElement = document.getElementById('currentPath');
+            currentPathElement.textContent = `Current path: ${currentFolderPath || '/'}`;
+
+            const folderList = document.getElementById('folderList');
+            folderList.innerHTML = '';
+
+            if (currentFolderPath) {
+                const parentFolder = document.createElement('div');
+                parentFolder.innerHTML = '<span style="margin-right: 5px;">📁</span> ..';
+                parentFolder.style.cursor = 'pointer';
+                parentFolder.onclick = () => {
+                    currentFolderPath = currentFolderPath.split('/').slice(0, -1).join('/');
+                    updateFolderNavigation();
+                };
+                folderList.appendChild(parentFolder);
+            }
+
+            // Fetch and display folders and files
+            fetch(`{{ url_for('get_folders_and_files', username=username) }}?path=${currentFolderPath}`)
+                .then(response => response.json())
+                .then(data => {
+                    data.folders.forEach(folder => {
+                        const folderElement = document.createElement('div');
+                        folderElement.innerHTML = `<span style="margin-right: 5px;">📁</span> ${folder}`;
+                        folderElement.style.cursor = 'pointer';
+                        folderElement.onclick = () => {
+                            currentFolderPath = currentFolderPath ? `${currentFolderPath}/${folder}` : folder;
+                            updateFolderNavigation();
+                        };
+                        folderList.appendChild(folderElement);
+                    });
+
+                    data.files.forEach(file => {
+                        const fileElement = document.createElement('div');
+                        fileElement.innerHTML = `<span style="margin-right: 5px;">📄</span> ${file}`;
+                        folderList.appendChild(fileElement);
+                    });
+                });
+        }
+
+        function showNewFolderInput() {
+            document.getElementById('newFolderInputContainer').style.display = 'block';
+            document.getElementById('newFolderInput').focus();
+        }
+
+        function createNewFolder() {
+            const newFolderName = document.getElementById('newFolderInput').value.trim();
+            if (newFolderName) {
+                fetch("{{ url_for('create_folder', username=username) }}", {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        folder_name: newFolderName,
+                        subpath: currentFolderPath
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        document.getElementById('newFolderInput').value = '';
+                        document.getElementById('newFolderInputContainer').style.display = 'none';
+                        updateFolderNavigation();
+                    } else {
+                        alert('Error creating folder: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while creating the folder');
+                });
+            }
+        }
+
+        function closeFolderNavigation() {
+            document.getElementById('folderNavigationModal').style.display = 'none';
+        }
+
+        function confirmFolderNavigation() {
+            if (actionType === 'move') {
+                moveItem(itemToMove, 'file', currentFolderPath);
+            } else if (actionType === 'copy') {
+                copyItem(itemToMove, 'file', currentFolderPath);
+            }
+            closeFolderNavigation();
+        }
+
+        function moveItem(name, type, destination) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('move_item', username=username, subpath=current_path) }}";
+            const nameInput = document.createElement('input');
+            nameInput.type = 'hidden';
+            nameInput.name = 'item_name';
+            nameInput.value = name;
+            const typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'item_type';
+            typeInput.value = type;
+            const destInput = document.createElement('input');
+            destInput.type = 'hidden';
+            destInput.name = 'destination_folder';
+            destInput.value = destination;
+            form.appendChild(nameInput);
+            form.appendChild(typeInput);
+            form.appendChild(destInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
+
+        function copyItem(name, type, destination) {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = "{{ url_for('copy_item', username=username, subpath=current_path) }}";
+            const nameInput = document.createElement('input');
+            nameInput.type = 'hidden';
+            nameInput.name = 'item_name';
+            nameInput.value = name;
+            const typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'item_type';
+            typeInput.value = type;
+            const destInput = document.createElement('input');
+            destInput.type = 'hidden';
+            destInput.name = 'destination_folder';
+            destInput.value = destination;
+            form.appendChild(nameInput);
+            form.appendChild(typeInput);
+            form.appendChild(destInput);
+            document.body.appendChild(form);
+            form.submit();
+        }
     </script>
 </body>
 </html>

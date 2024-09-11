@@ -22,7 +22,7 @@ app.secret_key = 'your_secret_key_here'  # Add this line
 UPLOAD_FOLDER = './uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 DATABASE = 'data.db'
-app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Set cookie to expire after 30 days
+app.config['REMEMBER_COOKIE_DURATION'] = timedelta(days=30)  # Set cookie to expire after 30 day
 
 if not os.path.exists(UPLOAD_FOLDER):
     os.makedirs(UPLOAD_FOLDER)
@@ -501,17 +501,6 @@ def rename_user_file(username):
         os.rename(old_path, new_path)
     return redirect(url_for('user_files', username=username))
 
-@app.route('/dash/<username>/create_folder', methods=['POST'])
-@login_required
-def create_folder(username):
-    if current_user.username != username:
-        return "Unauthorized", 401
-    subpath = request.form.get('subpath', '').rstrip('/')
-    folder_name = secure_filename(request.form['folder_name'])
-    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath, folder_name)
-    if not os.path.exists(folder_path):
-        os.makedirs(folder_path)
-    return redirect(url_for('user_files', username=username, subpath=subpath))
 
 @app.route('/dash/<username>/delete_folder/<folder_name>', methods=['POST'])
 @login_required
@@ -880,7 +869,7 @@ def create_new_file(username):
     if current_user.username != username:
         return "Unauthorized", 401
     subpath = request.form.get('subpath', '').rstrip('/')
-    file_name = secure_filename(request.form['file_name'])
+    file_name = request.form['file_name']
     file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath, file_name)
     if not os.path.exists(file_path):
         with open(file_path, 'w') as f:
@@ -890,6 +879,80 @@ def create_new_file(username):
         flash(f"File '{file_name}' already exists.", 'error')
     return redirect(url_for('user_files', username=username, subpath=subpath))
 
+@app.route('/dash/<username>/get_folders')
+@login_required
+def get_folders(username):
+    if current_user.username != username:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    subpath = request.args.get('path', '')
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath)
+    
+    if not os.path.exists(folder_path):
+        return jsonify({'error': 'Folder not found'}), 404
+    
+    folders = [f for f in os.listdir(folder_path) if os.path.isdir(os.path.join(folder_path, f))]
+    return jsonify(folders)
+
+@app.route('/dash/<username>/get_folders_and_files')
+@login_required
+def get_folders_and_files(username):
+    if current_user.username != username:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    subpath = request.args.get('path', '')
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath)
+    
+    if not os.path.exists(folder_path):
+        return jsonify({'error': 'Folder not found'}), 404
+    
+    folders = []
+    files = []
+    for item in os.listdir(folder_path):
+        item_path = os.path.join(folder_path, item)
+        if os.path.isdir(item_path):
+            folders.append(item)
+        else:
+            files.append(item)
+    
+    return jsonify({'folders': folders, 'files': files})
+
+@app.route('/dash/<username>/create_folder', methods=['POST'])
+@login_required
+def create_folder(username):
+    if current_user.username != username:
+        return jsonify({'error': 'Unauthorized'}), 401
+    
+    if request.is_json:
+        data = request.get_json()
+        folder_name = data.get('folder_name')
+        subpath = data.get('subpath', '').rstrip('/')
+    else:
+        folder_name = request.form.get('folder_name')
+        subpath = request.form.get('subpath', '').rstrip('/')
+    
+    if not folder_name:
+        return jsonify({'error': 'Folder name is required'}), 400
+    
+    folder_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath, folder_name)
+    
+    if os.path.exists(folder_path):
+        return jsonify({'error': 'Folder already exists'}), 400
+    
+    try:
+        os.makedirs(folder_path)
+        if request.is_json:
+            return jsonify({'success': True, 'message': 'Folder created successfully'})
+        else:
+            flash(f"Folder '{folder_name}' created successfully.", 'success')
+            return redirect(url_for('user_files', username=username, subpath=subpath))
+    except Exception as e:
+        if request.is_json:
+            return jsonify({'error': str(e)}), 500
+        else:
+            flash(f"Error creating folder: {str(e)}", 'error')
+            return redirect(url_for('user_files', username=username, subpath=subpath))
+
 if __name__ == '__main__':
     # Start the cleanup thread
     cleanup_thread = threading.Thread(target=delete_old_files)
@@ -897,88 +960,3 @@ if __name__ == '__main__':
     cleanup_thread.start()
 
     app.run(host='0.0.0.0', port=7123, debug=True)
-def api_upload():
-    api_key = request.headers.get('X-API-Key')
-    if not api_key:
-        return jsonify({'error': 'API key is missing'}), 401
-
-    db = get_db()
-    cursor = db.cursor()
-    cursor.execute("SELECT * FROM users WHERE api_key = ?", (api_key,))
-    user = cursor.fetchone()
-
-    if not user:
-        return jsonify({'error': 'Invalid API key'}), 401
-
-    if 'file' in request.files:
-        file = request.files['file']
-        if file.filename == '':
-            return jsonify({'error': 'No selected file'}), 400
-        if file:
-            filename = secure_filename(file.filename)
-            extension = os.path.splitext(filename)[1].lower()
-            
-            if extension == '.txt':
-                # Handle text files as pastebins
-                content = file.read().decode('utf-8')
-                vanity = shortuuid.uuid()[:8]
-                
-                cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                               (vanity, 'pastebin', content, datetime.now(), user[0]))
-                db.commit()
-                
-                url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
-                delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
-            else:
-                # Handle other file types
-                vanity = shortuuid.uuid()[:8]
-                new_filename = f"{vanity}{extension}"
-                file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-                file.save(file_path)
-                
-                cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                               (new_filename, 'file', new_filename, datetime.now(), user[0]))
-                db.commit()
-                
-                url = url_for('redirect_vanity', vanity=new_filename, _external=True, _scheme='https')
-                delete_url = url_for('delete_content', vanity=new_filename, _external=True, _scheme='https')
-            
-            return json.dumps({
-                'status': 'success',
-                'url': url.replace('/download', ''),
-                'deletion_url': delete_url,
-            })
-    elif 'text' in request.form:
-        content = request.form['text']
-        vanity = shortuuid.uuid()[:8]
-        
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity, 'pastebin', content, datetime.now(), user[0]))
-        db.commit()
-        
-        url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
-        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
-        
-        return json.dumps({
-            'status': 'success',
-            'url': url.replace('/download', ''),
-            'deletion_url': delete_url,
-        })
-    elif 'url' in request.form:
-        long_url = request.form['url']
-        vanity = shortuuid.uuid()[:8]
-        
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity, 'url', long_url, datetime.now(), user[0]))
-        db.commit()
-        
-        short_url = url_for('redirect_vanity', vanity=vanity, _external=True, _scheme='https')
-        delete_url = url_for('delete_content', vanity=vanity, _external=True, _scheme='https')
-        
-        return json.dumps({
-            'status': 'success',
-            'url': short_url.replace('/download', ''),
-            'deletion_url': delete_url,
-        })
-
-    return jsonify({'error': 'No file, text, or URL content provided'}), 400
