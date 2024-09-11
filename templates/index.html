@@ -3,739 +3,600 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>aCloud - Seamless File & Text Sharing</title>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <title>aCloud - File Sharing Service</title>
     <style>
         :root {
-            --primary-color: #4a90e2;
-            --secondary-color: #50c878;
-            --background-color: #121212;
-            --text-color: #ffffff;
-            --accent-color: #ff6b6b;
-            --container-bg: #1e1e1e;
-            --input-bg: #2a2a2a;
-            --input-focus: #3a3a3a;
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --accent-color: #4CAF50;
+            --container-bg: #2a2a2a;
+            --input-bg: #333;
+            --input-border: #4CAF50;
         }
 
-        body.default-dark {
-            --primary-color: #4a90e2;
-            --secondary-color: #50c878;
-            --background-color: #121212;
-            --text-color: #ffffff;
-            --accent-color: #ff6b6b;
-            --container-bg: #1e1e1e;
-            --input-bg: #2a2a2a;
-            --input-focus: #3a3a3a;
-        }
-
-        body.default-light {
-            --primary-color: #4a90e2;
-            --secondary-color: #50c878;
-            --background-color: #f0f0f0;
-            --text-color: #333333;
-            --accent-color: #ff6b6b;
-            --container-bg: #ffffff;
-            --input-bg: #e0e0e0;
-            --input-focus: #d0d0d0;
-        }
-
-        body.pink-dark {
-            --primary-color: #ff69b4;
-            --secondary-color: #ffc0cb;
-            --background-color: #4a0e1c;
-            --text-color: #ffffff;
-            --accent-color: #db7093;
-            --container-bg: #69142c;
-            --input-bg: #8b1a3a;
-            --input-focus: #ad2148;
-        }
-
-        body.pink-light {
-            --primary-color: #ff69b4;
-            --secondary-color: #ffc0cb;
-            --background-color: #ffe4e1;
-            --text-color: #4a0e1c;
-            --accent-color: #db7093;
-            --container-bg: #fff0f5;
-            --input-bg: #ffd1dc;
-            --input-focus: #ffb6c1;
-        }
-
-        body.red-dark {
-            --primary-color: #ff0000;
-            --secondary-color: #ff6347;
-            --background-color: #8b0000;
-            --text-color: #ffffff;
-            --accent-color: #dc143c;
-            --container-bg: #b22222;
-            --input-bg: #cd5c5c;
-            --input-focus: #ff4500;
-        }
-
-        body.red-light {
-            --primary-color: #ff0000;
-            --secondary-color: #ff6347;
-            --background-color: #fff5f5;
-            --text-color: #8b0000;
-            --accent-color: #dc143c;
-            --container-bg: #ffebeb;
-            --input-bg: #ffd5d5;
-            --input-focus: #ffbfbf;
-        }
-
-        body.black-dark {
-            --primary-color: #ffffff;
-            --secondary-color: #808080;
-            --background-color: #000000;
-            --text-color: #ffffff;
-            --accent-color: #c0c0c0;
-            --container-bg: #1a1a1a;
-            --input-bg: #2c2c2c;
-            --input-focus: #3d3d3d;
-        }
-
-        body.black-light {
-            --primary-color: #000000;
-            --secondary-color: #404040;
-            --background-color: #f0f0f0;
-            --text-color: #000000;
-            --accent-color: #808080;
-            --container-bg: #ffffff;
-            --input-bg: #e0e0e0;
-            --input-focus: #d0d0d0;
-        }
-
-        body.gray-dark {
-            --primary-color: #a9a9a9;
-            --secondary-color: #d3d3d3;
-            --background-color: #696969;
-            --text-color: #f5f5f5;
-            --accent-color: #dcdcdc;
-            --container-bg: #808080;
-            --input-bg: #a0a0a0;
-            --input-focus: #b8b8b8;
-        }
-
-        body.gray-light {
-            --primary-color: #696969;
-            --secondary-color: #a9a9a9;
-            --background-color: #f5f5f5;
-            --text-color: #333333;
-            --accent-color: #808080;
-            --container-bg: #ffffff;
-            --input-bg: #e0e0e0;
-            --input-focus: #d0d0d0;
-        }
-
-        body.blue-dark {
-            --primary-color: #1e90ff;
-            --secondary-color: #87cefa;
-            --background-color: #00008b;
-            --text-color: #f0f8ff;
-            --accent-color: #4169e1;
-            --container-bg: #4682b4;
-            --input-bg: #6495ed;
-            --input-focus: #00bfff;
-        }
-
-        body.blue-light {
-            --primary-color: #1e90ff;
-            --secondary-color: #87cefa;
-            --background-color: #f0f8ff;
-            --text-color: #00008b;
-            --accent-color: #4169e1;
-            --container-bg: #e6f2ff;
-            --input-bg: #cce6ff;
-            --input-focus: #b3d9ff;
-        }
-
-        body.green-dark {
-            --primary-color: #32cd32;
-            --secondary-color: #90ee90;
-            --background-color: #006400;
-            --text-color: #f0fff0;
-            --accent-color: #00fa9a;
-            --container-bg: #228b22;
-            --input-bg: #3cb371;
-            --input-focus: #00ff7f;
-        }
-
-        body.green-light {
-            --primary-color: #32cd32;
-            --secondary-color: #90ee90;
-            --background-color: #f0fff0;
-            --text-color: #006400;
-            --accent-color: #00fa9a;
-            --container-bg: #e6ffe6;
-            --input-bg: #ccffcc;
-            --input-focus: #b3ffb3;
-        }
-
-        body.purple-dark {
-            --primary-color: #8a2be2;
-            --secondary-color: #dda0dd;
-            --background-color: #4b0082;
-            --text-color: #e6e6fa;
-            --accent-color: #9370db;
-            --container-bg: #663399;
-            --input-bg: #9932cc;
-            --input-focus: #ba55d3;
-        }
-
-        body.purple-light {
-            --primary-color: #8a2be2;
-            --secondary-color: #dda0dd;
-            --background-color: #f8f0ff;
-            --text-color: #4b0082;
-            --accent-color: #9370db;
-            --container-bg: #f0e6ff;
-            --input-bg: #e6ccff;
-            --input-focus: #d9b3ff;
-        }
-
-        body.orange-dark {
-            --primary-color: #ffa500;
-            --secondary-color: #ffd700;
-            --background-color: #ff8c00;
-            --text-color: #fffaf0;
-            --accent-color: #ff4500;
-            --container-bg: #ff7f50;
-            --input-bg: #ffa07a;
-            --input-focus: #ffb347;
-        }
-
-        body.orange-light {
-            --primary-color: #ffa500;
-            --secondary-color: #ffd700;
-            --background-color: #fffaf0;
-            --text-color: #ff8c00;
-            --accent-color: #ff4500;
-            --container-bg: #fff5e6;
-            --input-bg: #ffebcc;
-            --input-focus: #ffe0b3;
-        }
-
-        body.teal-dark {
-            --primary-color: #008080;
-            --secondary-color: #20b2aa;
-            --background-color: #005353;
-            --text-color: #e0ffff;
-            --accent-color: #40e0d0;
-            --container-bg: #008b8b;
-            --input-bg: #48d1cc;
-            --input-focus: #00ced1;
-        }
-
-        body.teal-light {
-            --primary-color: #008080;
-            --secondary-color: #20b2aa;
-            --background-color: #e0ffff;
-            --text-color: #005353;
-            --accent-color: #40e0d0;
-            --container-bg: #f0ffff;
-            --input-bg: #e0ffff;
-            --input-focus: #d0ffff;
-        }
-
-        body.yellow-dark {
-            --primary-color: #ffd700;
-            --secondary-color: #ffff00;
-            --background-color: #8b8000;
-            --text-color: #fffacd;
-            --accent-color: #daa520;
-            --container-bg: #b8860b;
-            --input-bg: #f0e68c;
-            --input-focus: #eee8aa;
-        }
-
-        body.yellow-light {
-            --primary-color: #ffd700;
-            --secondary-color: #ffff00;
-            --background-color: #fffacd;
-            --text-color: #8b8000;
-            --accent-color: #daa520;
-            --container-bg: #fff8dc;
-            --input-bg: #fffacd;
-            --input-focus: #fff5e6;
-        }
-
-        body.brown-dark {
-            --primary-color: #8b4513;
-            --secondary-color: #d2691e;
-            --background-color: #3e2723;
-            --text-color: #deb887;
-            --accent-color: #cd853f;
-            --container-bg: #5d4037;
-            --input-bg: #795548;
-            --input-focus: #8d6e63;
-        }
-
-        body.brown-light {
-            --primary-color: #8b4513;
-            --secondary-color: #d2691e;
-            --background-color: #f5e6d3;
-            --text-color: #3e2723;
-            --accent-color: #cd853f;
-            --container-bg: #fff5e6;
-            --input-bg: #ffe4b5;
-            --input-focus: #ffdab9;
-        }
-
-        body.solarized-dark {
-        --primary-color: #b58900;
-        --secondary-color: #859900;
-        --background-color: #002b36;
-        --text-color: #839496;
-        --accent-color: #cb4b16;
-        --container-bg: #073642;
-        --input-bg: #094352;
-        --input-focus: #0b5365;
-    }
         body {
-            font-family: 'Poppins', sans-serif;
+            font-family: 'Roboto', Arial, sans-serif;
+            line-height: 1.6;
             margin: 0;
             padding: 0;
-            background-color: var(--background-color);
-            color: var(--text-color);
             display: flex;
             flex-direction: column;
             min-height: 100vh;
-            line-height: 1.6;
-            transition: all 0.3s ease;
+            background-color: var(--background-color);
+            color: var(--text-color);
         }
 
         .container {
             flex: 1;
-            max-width: 1200px;
-            width: 95%;
-            margin: 1rem auto;
-            padding: 1rem;
-            background-color: var(--container-bg);
-            border-radius: 20px;
-            box-shadow: 0 0 30px rgba(74, 144, 226, 0.1);
-        }
-
-        .header {
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            margin-bottom: 1rem;
+            justify-content: flex-start;
+            padding: 20px;
         }
 
-        .logo {
-            font-size: 2.5rem;
-            font-weight: 700;
+        nav {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+        }
+
+        nav a {
             color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
+            text-decoration: none;
+            margin: 0 10px;
+            font-weight: 500;
+            transition: color 0.3s ease;
         }
 
-        .auth-buttons {
-            display: flex;
-            gap: 0.5rem;
-            align-items: center;
-        }
-
-        .btn {
-            padding: 0.5rem 1rem;
-            border: none;
-            border-radius: 25px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            font-size: 0.9rem;
-            text-transform: uppercase;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: var(--background-color);
-        }
-
-        .btn-secondary {
-            background-color: var(--secondary-color);
-            color: var(--background-color);
-        }
-
-        .btn:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 0 15px rgba(255, 255, 255, 0.2);
-        }
-
-        .hero {
-            text-align: center;
-            margin-bottom: 2rem;
-        }
-
-        .hero h1 {
-            font-size: 3rem;
-            margin-bottom: 0.5rem;
-            color: var(--primary-color);
-            text-shadow: 0 0 20px var(--primary-color);
-        }
-
-        .hero p {
-            font-size: 1.2rem;
-            color: var(--text-color);
-            max-width: 600px;
-            margin: 0 auto;
-        }
-
-        .upload-section {
-            background-color: var(--input-bg);
-            padding: 1.5rem;
-            border-radius: 15px;
-            margin-bottom: 1.5rem;
+        nav a:hover {
+            color: var(--accent-color);
         }
 
         .upload-options {
-            display: flex;
-            justify-content: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            flex-wrap: wrap;
+            margin-bottom: 20px;
+        }
+
+        .upload-options button {
+            background-color: var(--primary-color);
+            border: none;
+            color: white;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .upload-options button:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
         .upload-form {
             display: none;
+            background-color: var(--container-bg);
+            padding: 18px;
+            border-radius: 8px;
+            max-width: 380px;
+            width: 100%;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
         .upload-form.active {
             display: block;
-            animation: fadeIn 0.3s ease-in-out;
         }
 
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        .form-group {
-            margin-bottom: 1rem;
-        }
-
-        .form-group label {
-            display: block;
-            margin-bottom: 0.4rem;
-            font-weight: 600;
-            font-size: 0.9rem;
-            color: var(--accent-color);
-        }
-
-        .form-group input[type="text"],
-        .form-group textarea {
-            width: calc(100% - 20px);
-            padding: 0.7rem;
-            border: 2px solid var(--input-focus);
-            border-radius: 10px;
-            font-size: 0.9rem;
+        .upload-form input[type="text"],
+        .upload-form input[type="file"],
+        .upload-form textarea {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 4px;
+            border: 1px solid var(--input-border);
             background-color: var(--input-bg);
             color: var(--text-color);
-            transition: all 0.3s ease;
+            font-size: 14px;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .form-group input[type="text"]:focus,
-        .form-group textarea:focus {
-            border-color: var(--primary-color);
+        .upload-form input[type="text"]:focus,
+        .upload-form input[type="file"]:focus,
+        .upload-form textarea:focus {
             outline: none;
-            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+            border-color: var(--accent-color);
+            box-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
         }
 
-        .file-input-container {
-            background-color: var(--container-bg);
-            padding: 1rem;
-            border-radius: 10px;
-            margin-bottom: 1rem;
-        }
-
-        .file-input-wrapper {
-            position: relative;
-            overflow: hidden;
-            display: inline-block;
+        .upload-form button {
+            background-color: var(--primary-color);
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
             cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .file-input-wrapper input[type="file"] {
-            position: absolute;
-            left: 0;
-            top: 0;
-            opacity: 0;
-            cursor: pointer;
-        }
-
-        .file-input-wrapper .btn {
-            display: inline-block;
-            padding: 0.6rem 1.2rem;
-            background-color: var(--accent-color);
-            color: var(--background-color);
-            border-radius: 25px;
-            font-weight: 600;
-            transition: all 0.3s ease;
-        }
-
-        .file-input-wrapper:hover .btn {
-            background-color: #ff8c8c;
-        }
-
-        .file-name {
-            margin-left: 10px;
-            font-size: 0.9rem;
-            color: var(--accent-color);
+        .upload-form button:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
         }
 
         .result {
-            margin-top: 1rem;
-            padding: 0.8rem;
-            background-color: var(--secondary-color);
-            color: var(--background-color);
-            border-radius: 10px;
-            text-align: center;
-            font-size: 0.9rem;
-            font-weight: 600;
+            margin-top: 10px;
+            color: var(--primary-color);
+            font-weight: 500;
         }
 
-        footer {
+        .footer {
+            text-align: center;
+            padding: 10px;
             background-color: var(--container-bg);
             color: var(--text-color);
+            font-size: 12px;
+        }
+
+        .typewriter-container {
+            font-family: 'Roboto Mono', monospace;
+            white-space: pre-wrap;
+            overflow: hidden;
+            font-size: 1.2em;
+            margin-bottom: 20px;
             text-align: center;
-            padding: 1rem;
-            margin-top: 1rem;
-            font-size: 0.9rem;
-            border-radius: 0 0 20px 20px;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            height: 100px;
+            position: relative;
         }
 
-        footer a {
-            color: var(--accent-color);
-            text-decoration: none;
-            font-weight: 600;
-            transition: all 0.3s ease;
+        .cursor {
+            display: inline-block;
+            width: 10px;
+            height: 20px;
+            background-color: var(--primary-color);
+            animation: blink 0.7s infinite;
+            position: absolute;
+            bottom: 0;
         }
 
-        footer a:hover {
-            color: var(--primary-color);
-            text-shadow: 0 0 10px var(--primary-color);
+        @keyframes blink {
+            0% { opacity: 0; }
+            50% { opacity: 1; }
+            100% { opacity: 0; }
         }
 
-        .settings-icon {
+        #settingsButton {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 4px;
             cursor: pointer;
-            font-size: 1.5rem;
-            color: var(--primary-color);
-            transition: all 0.3s ease;
+            font-size: 14px;
+            font-weight: 500;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            transition: background-color 0.3s ease, box-shadow 0.3s ease;
         }
 
-        .settings-icon:hover {
-            color: var(--accent-color);
+        #settingsButton:hover {
+            background-color: var(--secondary-color);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.3);
         }
 
-        @media (max-width: 768px) {
-            .container {
-                width: 95%;
-                padding: 0.5rem;
-            }
-
-            .hero h1 {
-                font-size: 2rem;
-            }
-
-            .hero p {
-                font-size: 1rem;
-            }
-
-            .upload-options {
-                flex-direction: column;
-            }
-
-            .btn {
-                width: 100%;
-            }
+        #settingsMenu {
+            display: none;
+            position: absolute;
+            top: 60px;
+            left: 20px;
+            background-color: var(--container-bg);
+            border-radius: 4px;
+            padding: 10px;
+            z-index: 1000;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
-   .settings-dropdown {
-        display: none;
-        position: absolute;
-        right: 20px;
-        top: 60px;
-        background-color: var(--container-bg);
-        border-radius: 10px;
-        box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
-        z-index: 1000;
-    }
 
-    .settings-dropdown.show {
-        display: flex;
-    }
+        #settingsMenu button {
+            display: block;
+            width: 100%;
+            padding: 8px 10px;
+            margin: 5px 0;
+            background-color: var(--primary-color);
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.3s ease;
+        }
 
-    .theme-column {
-        width: 50%;
-    }
+        #settingsMenu button:hover {
+            background-color: var(--secondary-color);
+        }
 
-    .theme-option {
-        padding: 10px 20px;
-        cursor: pointer;
-        transition: all 0.3s ease;
-    }
+        body.default-dark {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #1a1a1a;
+            --text-color: #f0f0f0;
+            --accent-color: #4CAF50;
+            --container-bg: #2a2a2a;
+            --input-bg: #333;
+            --input-border: #4CAF50;
+        }
 
-    .theme-option:hover {
-        background-color: var(--input-bg);
-    }
+        body.default-light {
+            --primary-color: #4CAF50;
+            --secondary-color: #45a049;
+            --background-color: #f0f0f0;
+            --text-color: #333333;
+            --accent-color: #4CAF50;
+            --container-bg: #ffffff;
+            --input-bg: #e0e0e0;
+            --input-border: #4CAF50;
+        }
 
-    .theme-category {
-        font-weight: bold;
-        padding: 10px 20px;
-        background-color: var(--input-bg);
-        color: var(--accent-color);
-    }
+        body.solarized-dark {
+            --primary-color: #b58900;
+            --secondary-color: #859900;
+            --background-color: #002b36;
+            --text-color: #839496;
+            --accent-color: #cb4b16;
+            --container-bg: #073642;
+            --input-bg: #094352;
+            --input-border: #b58900;
+        }
+
+        body.blue-dark {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --background-color: #34495e;
+            --text-color: #ecf0f1;
+            --accent-color: #e74c3c;
+            --container-bg: #2c3e50;
+            --input-bg: #465669;
+            --input-border: #3498db;
+        }
+
+        body.purple-dark {
+            --primary-color: #9b59b6;
+            --secondary-color: #8e44ad;
+            --background-color: #4a235a;
+            --text-color: #ecf0f1;
+            --accent-color: #f1c40f;
+            --container-bg: #5b2c6f;
+            --input-bg: #6c3483;
+            --input-border: #9b59b6;
+        }
+
+        body.red-dark {
+            --primary-color: #e74c3c;
+            --secondary-color: #c0392b;
+            --background-color: #641e16;
+            --text-color: #ecf0f1;
+            --accent-color: #f39c12;
+            --container-bg: #7b241c;
+            --input-bg: #922b21;
+            --input-border: #e74c3c;
+        }
+
+        body.green-light {
+            --primary-color: #2ecc71;
+            --secondary-color: #27ae60;
+            --background-color: #e8f8f5;
+            --text-color: #1e8449;
+            --accent-color: #e67e22;
+            --container-bg: #d1f2eb;
+            --input-bg: #a3e4d7;
+            --input-border: #2ecc71;
+        }
+
+        body.orange-dark {
+            --primary-color: #e67e22;
+            --secondary-color: #d35400;
+            --background-color: #6e2c00;
+            --text-color: #fbeee6;
+            --accent-color: #3498db;
+            --container-bg: #873600;
+            --input-bg: #a04000;
+            --input-border: #e67e22;
+        }
+
+        body.pink-light {
+            --primary-color: #e84393;
+            --secondary-color: #fd79a8;
+            --background-color: #ffeef8;
+            --text-color: #8e44ad;
+            --accent-color: #00cec9;
+            --container-bg: #fad7f0;
+            --input-bg: #f8c0e0;
+            --input-border: #e84393;
+        }
+
+        body.pastel-light {
+            --primary-color: #ffb3ba;
+            --secondary-color: #bae1ff;
+            --background-color: #ffffba;
+            --text-color: #555555;
+            --accent-color: #baffc9;
+            --container-bg: #ffdfba;
+            --input-bg: #ffffba;
+            --input-border: #ffb3ba;
+        }
+
+
+
+        body.forest {
+            --primary-color: #2ecc71;
+            --secondary-color: #27ae60;
+            --background-color: #1e3a1e;
+            --text-color: #e0e0e0;
+            --accent-color: #f1c40f;
+            --container-bg: #2c532c;
+            --input-bg: #3a6c3a;
+            --input-border: #2ecc71;
+        }
+
+        body.ocean {
+            --primary-color: #3498db;
+            --secondary-color: #2980b9;
+            --background-color: #0c2d48;
+            --text-color: #ecf0f1;
+            --accent-color: #e67e22;
+            --container-bg: #1a4a72;
+            --input-bg: #28679c;
+            --input-border: #3498db;
+        }
+
+        body.sunset {
+            --primary-color: #ff7f50;
+            --secondary-color: #ff6347;
+            --background-color: #4a0e1c;
+            --text-color: #ffd700;
+            --accent-color: #ff4500;
+            --container-bg: #721422;
+            --input-bg: #9a1a2c;
+            --input-border: #ff7f50;
+        }
+
+        body.retro {
+            --primary-color: #33cc33;
+            --secondary-color: #66ff66;
+            --background-color: #000000;
+            --text-color: #33cc33;
+            --accent-color: #ffff00;
+            --container-bg: #001100;
+            --input-bg: #002200;
+            --input-border: #33cc33;
+        }
+
+        body.desert {
+            --primary-color: #d2691e;
+            --secondary-color: #b8860b;
+            --background-color: #f4a460;
+            --text-color: #8b4513;
+            --accent-color: #ff8c00;
+            --container-bg: #deb887;
+            --input-bg: #ffdab9;
+            --input-border: #d2691e;
+        }
+
+        body.arctic {
+            --primary-color: #87cefa;
+            --secondary-color: #1e90ff;
+            --background-color: #f0f8ff;
+            --text-color: #4682b4;
+            --accent-color: #00bfff;
+            --container-bg: #e6f3ff;
+            --input-bg: #f0f8ff;
+            --input-border: #87cefa;
+        }
+
+        body.volcanic {
+            --primary-color: #ff4500;
+            --secondary-color: #ff6347;
+            --background-color: #8b0000;
+            --text-color: #ffd700;
+            --accent-color: #ff8c00;
+            --container-bg: #a52a2a;
+            --input-bg: #b22222;
+            --input-border: #ff4500;
+        }
+
+        body.space {
+            --primary-color: #4b0082;
+            --secondary-color: #8a2be2;
+            --background-color: #191970;
+            --text-color: #e6e6fa;
+            --accent-color: #9370db;
+            --container-bg: #483d8b;
+            --input-bg: #6a5acd;
+            --input-border: #4b0082;
+        }
+
+        body.autumn {
+            --primary-color: #b8860b;
+            --secondary-color: #cd853f;
+            --background-color: #8b4513;
+            --text-color: #ffd700;
+            --accent-color: #ff8c00;
+            --container-bg: #d2691e;
+            --input-bg: #deb887;
+            --input-border: #b8860b;
+        }
     </style>
 </head>
-<body class="default">
+<body>
     <div class="container">
-        <header class="header">
-            <div class="logo">aCloud</div>
-            <div class="auth-buttons">
-                <button class="btn btn-primary">Login</button>
-                <button class="btn btn-secondary">Register</button>
-                <i class="fas fa-cog settings-icon" id="settingsIcon"></i>
-            </div>
-        </header>
+        <nav>
+            {% if user %}
+                <a href="{{ url_for('user_files', username=user.username) }}">View Dashboard</a>
+                <a href="{{ url_for('logout') }}">Logout</a>
+            {% else %}
+                <a href="{{ url_for('login') }}">Login</a>
+                <a href="{{ url_for('register') }}">Register</a>
+            {% endif %}
+        </nav>
 
-        <div class="settings-dropdown" id="settingsDropdown">
-            <div class="theme-column">
-                <div class="theme-category">Dark Themes</div>
-                <div class="theme-option" onclick="changeTheme('default-dark')">Default Dark</div>
-                <div class="theme-option" onclick="changeTheme('pink-dark')">Pink Dark</div>
-                <div class="theme-option" onclick="changeTheme('black-dark')">Black Dark</div>
-                <div class="theme-option" onclick="changeTheme('gray-dark')">Gray Dark</div>
-                <div class="theme-option" onclick="changeTheme('blue-dark')">Blue Dark</div>
-                <div class="theme-option" onclick="changeTheme('green-dark')">Green Dark</div>
-                <div class="theme-option" onclick="changeTheme('purple-dark')">Purple Dark</div>
-                <div class="theme-option" onclick="changeTheme('yellow-dark')">Yellow Dark</div>
-                <div class="theme-option" onclick="changeTheme('brown-dark')">Brown Dark</div>
-                <div class="theme-option" onclick="changeTheme('solarized-dark')">Solarized Dark</div>
-            </div>
-            <div class="theme-column">
-                <div class="theme-category">Light Themes</div>
-                <div class="theme-option" onclick="changeTheme('default-light')">Default Light</div>
-                <div class="theme-option" onclick="changeTheme('pink-light')">Pink Light</div>
-                <div class="theme-option" onclick="changeTheme('red-light')">Red Light</div>
-                <div class="theme-option" onclick="changeTheme('black-light')">Black Light</div>
-                <div class="theme-option" onclick="changeTheme('gray-light')">Gray Light</div>
-                <div class="theme-option" onclick="changeTheme('blue-light')">Blue Light</div>
-                <div class="theme-option" onclick="changeTheme('green-light')">Green Light</div>
-                <div class="theme-option" onclick="changeTheme('purple-light')">Purple Light</div>
-                <div class="theme-option" onclick="changeTheme('orange-light')">Orange Light</div>
-                <div class="theme-option" onclick="changeTheme('teal-light')">Teal Light</div>
-                <div class="theme-option" onclick="changeTheme('brown-light')">Brown Light</div>
-            </div>
+        <button id="settingsButton">⚙️ Settings</button>
+        <div id="settingsMenu" style="display: none;">
+            <button onclick="setTheme('default-dark')">Default Dark</button>
+            <button onclick="setTheme('default-light')">Default Light</button>
+            <button onclick="setTheme('solarized-dark')">Solarized Dark</button>
+            <button onclick="setTheme('blue-dark')">Blue Dark</button>
+            <button onclick="setTheme('purple-dark')">Purple Dark</button>
+            <button onclick="setTheme('red-dark')">Red Dark</button>
+            <button onclick="setTheme('green-light')">Green Light</button>
+            <button onclick="setTheme('orange-dark')">Orange Dark</button>
+            <button onclick="setTheme('pink-light')">Pink Light</button>
+            <button onclick="setTheme('pastel-light')">Pastel Light</button>
+            <button onclick="setTheme('forest')">Forest</button>
+            <button onclick="setTheme('ocean')">Ocean</button>
+            <button onclick="setTheme('sunset')">Sunset</button>
+            <button onclick="setTheme('retro')">Retro</button>
+            <button onclick="setTheme('desert')">Desert</button>
+            <button onclick="setTheme('arctic')">Arctic</button>
+            <button onclick="setTheme('volcanic')">Volcanic</button>
+            <button onclick="setTheme('space')">Space</button>
+            <button onclick="setTheme('autumn')">Autumn</button>
         </div>
 
+        <div class="typewriter-container">
+            <span id="typewriter-text"></span><span id="cursor" class="cursor"></span>
+        </div>
 
-        <script>
-            function toggleSettingsDropdown() {
-                const dropdown = document.getElementById('settingsDropdown');
-                dropdown.classList.toggle('show');
-            }
-            
-            function changeTheme(theme) {
-                document.body.className = theme;
-                localStorage.setItem('theme', theme);
-                toggleSettingsDropdown();
-            }
-            
-            document.addEventListener('DOMContentLoaded', function() {
-                const settingsIcon = document.getElementById('settingsIcon');
-                settingsIcon.addEventListener('click', toggleSettingsDropdown);
-            
-                const savedTheme = localStorage.getItem('theme');
-                if (savedTheme) {
-                    document.body.className = savedTheme;
-                } else {
-                    document.body.className = 'default-dark'; 
-                }
-            
-                document.addEventListener('click', function(event) {
-                    const dropdown = document.getElementById('settingsDropdown');
-                    const settingsIcon = document.getElementById('settingsIcon');
-                    if (!dropdown.contains(event.target) && event.target !== settingsIcon) {
-                        dropdown.classList.remove('show');
-                    }
-                });
-            });
-        </script>
-
-        <section class="hero">
-            <h1>Effortless File & Text Sharing</h1>
-            <p>Experience the simplicity of seamless, secure, and swift file sharing with aCloud.</p>
-        </section>
-
-        <section class="upload-section">
-            <div class="upload-options">
-                <button class="btn btn-primary" onclick="showForm('text')">Share Text</button>
-                <button class="btn btn-primary" onclick="showForm('file')">Upload File</button>
-                <button class="btn btn-primary" onclick="showForm('folder')">Upload Folder</button>
-                <button class="btn btn-primary" onclick="showForm('url')">Shorten URL</button>
-            </div>
-
+        <div class="upload-options">
+            <button onclick="showForm('text')">Upload Text</button>
+            <button onclick="showForm('file')">Upload File</button>
+            <button onclick="showForm('url')">Shorten URL</button>
+        </div>
+        <div id="uploadFormContainer">
             <div id="textForm" class="upload-form">
-                <h2>Share Your Text</h2>
-                <div class="form-group">
-                    <label for="textContent">Enter your text:</label>
-                    <textarea id="textContent" rows="4" placeholder="Type your message here..."></textarea>
-                </div>
-                <button class="btn btn-secondary" onclick="uploadText()">Share Now</button>
+                <h2>Upload Text</h2>
+                <form>
+                    <textarea name="content" rows="4" placeholder="Enter text here..."></textarea>
+                    <button type="button" onclick="uploadText()">Upload Text</button>
+                </form>
                 <div id="textResult" class="result"></div>
             </div>
-
             <div id="fileForm" class="upload-form">
-                <h2>Upload Your File</h2>
-                <div class="file-input-container">
-                    <div class="form-group">
-                        <label for="fileInput">Choose your file:</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="fileInput" onchange="updateFileName(this, 'fileInputLabel')">
-                            <span class="btn">Select File</span>
-                        </div>
-                        <span id="fileInputLabel" class="file-name">No file selected</span>
-                    </div>
-                </div>
-                <button class="btn btn-secondary" onclick="uploadFile()">Upload Now</button>
+                <h2>Upload File</h2>
+                <form enctype="multipart/form-data">
+                    <input type="file" name="file" />
+                    <button type="button" onclick="uploadFile()">Upload File</button>
+                </form>
                 <div id="fileResult" class="result"></div>
             </div>
-
-            <div id="folderForm" class="upload-form">
-                <h2>Upload Your Folder</h2>
-                <div class="file-input-container">
-                    <div class="form-group">
-                        <label for="folderInput">Choose your folder:</label>
-                        <div class="file-input-wrapper">
-                            <input type="file" id="folderInput" webkitdirectory directory multiple onchange="updateFileName(this, 'folderInputLabel')">
-                            <span class="btn">Select Folder</span>
-                        </div>
-                        <span id="folderInputLabel" class="file-name">No folder selected</span>
-                    </div>
-                </div>
-                <button class="btn btn-secondary" onclick="uploadFolder()">Upload Now</button>
-                <div id="folderResult" class="result"></div>
-            </div>
-
             <div id="urlForm" class="upload-form">
-                <h2>Shorten Your URL</h2>
-                <div class="form-group">
-                    <label for="urlInput">Enter your long URL:</label>
-                    <input type="text" id="urlInput" placeholder="https://example.com/very/long/url">
-                </div>
-                <button class="btn btn-secondary" onclick="shortenUrl()">Shorten Now</button>
+                <h2>Shorten URL</h2>
+                <form>
+                    <input type="text" name="url" placeholder="Enter URL here..." />
+                    <button type="button" onclick="shortenUrl()">Shorten URL</button>
+                </form>
                 <div id="urlResult" class="result"></div>
             </div>
-        </section>
+        </div>
     </div>
 
-    <footer>
-        <p>aCloud - Simplifying File Sharing | 
-            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub</a> | 
-            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a>
+    <footer class="footer">
+        <p>Source code available on: 
+            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub (not up-to-date)</a> | 
+            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git (main)</a>
         </p>
     </footer>
 
     <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const message1 = "Welcome to aCloud.";
+        const message2 = "\n A simple toolbox for file uploading,\n URL shortening and pastebin.";
+        const typewriterTextElement = document.getElementById('typewriter-text');
+        const cursorElement = document.getElementById('cursor');
+        const typingSpeed = 70;
+
+        function typeMessage(message, callback) {
+            let index = 0;
+
+            function typeCharacter() {
+                if (index < message.length) {
+                    if (message[index] === '\n') {
+                        typewriterTextElement.innerHTML += '<br>';
+                    } else {
+                        typewriterTextElement.innerHTML += message[index]; 
+                    }
+                    index++;
+                    updateCursorPosition(); 
+                    setTimeout(typeCharacter, typingSpeed);
+                } else if (callback) {
+                    setTimeout(callback, typingSpeed);
+                }
+            }
+
+            typeCharacter();
+        }
+
+        function updateCursorPosition() {
+            const textRect = typewriterTextElement.getBoundingClientRect();
+            cursorElement.style.left = (textRect.width + textRect.left - cursorElement.offsetWidth) + 'px';
+        }
+
+        typeMessage(message1, function() {
+            typeMessage(message2);
+        });
+
+
+        const settingsButton = document.getElementById('settingsButton');
+        const settingsMenu = document.getElementById('settingsMenu');
+        settingsButton.addEventListener('click', function() {
+            settingsMenu.style.display = settingsMenu.style.display === 'none' ? 'block' : 'none';
+        });
+    });
+
+    function setTheme(theme) {
+        document.body.className = theme;
+    }
+
+    document.getElementById('uploadForm').onsubmit = function(e) {
+        e.preventDefault();
+        var formData = new FormData(this);
+        var xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload/file', true);
+
+        xhr.upload.onprogress = function(e) {
+            if (e.lengthComputable) {
+                var percentComplete = (e.loaded / e.total) * 100;
+                document.getElementById('progressBar').style.display = 'block';
+                document.getElementById('progressBar').value = percentComplete;
+            }
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                alert('Upload complete!');
+                document.getElementById('progressBar').style.display = 'none';
+            } else {
+                alert('Upload failed.');
+            }
+        };
+        xhr.send(formData);
+    };
+
     function showForm(type) {
         document.querySelectorAll('.upload-form').forEach(form => {
             form.classList.remove('active');
@@ -743,83 +604,76 @@
         document.getElementById(type + 'Form').classList.add('active');
     }
 
-    function updateFileName(input, labelId) {
-        const label = document.getElementById(labelId);
-        if (input.files.length > 0) {
-            if (input.files.length === 1) {
-                label.textContent = input.files[0].name;
-            } else {
-                label.textContent = `${input.files.length} files selected`;
-            }
-        } else {
-            label.textContent = input.getAttribute('webkitdirectory') !== null ? 'No folder selected' : 'No file selected';
-        }
-    }
-
     function uploadText() {
-        const content = document.getElementById('textContent').value;
+        const content = document.querySelector('#textForm textarea').value;
         fetch('/upload/pastebin', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({ content }),
+            body: JSON.stringify({ content: content }),
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('textResult').innerHTML = `Text shared successfully! Access it <a href="/${data.vanity}">here</a>.`;
+            if (data.success) {
+                const simpleUrl = `${window.location.origin}/${data.vanity}`;
+                document.getElementById('textResult').innerHTML = `Pastebin created. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
+            } else {
+                document.getElementById('textResult').innerHTML = `Error: ${data.error}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('textResult').innerHTML = `An error occurred: ${error}`;
         });
     }
 
     function uploadFile() {
         const formData = new FormData();
-        formData.append('file', document.getElementById('fileInput').files[0]);
+        const fileInput = document.querySelector('#fileForm input[type="file"]');
+        formData.append('file', fileInput.files[0]);
         fetch('/upload/file', {
             method: 'POST',
             body: formData,
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('fileResult').innerHTML = `File uploaded successfully! Download it <a href="/download/${data.vanity}">here</a>.`;
-        });
-    }
-
-    function uploadFolder() {
-        const files = document.getElementById('folderInput').files;
-        if (files.length === 0) {
-            alert('Please select a folder.');
-            return;
-        }
-
-        const formData = new FormData();
-        for (const file of files) {
-            formData.append('file', file);
-        }
-
-        fetch('/upload/folder', {
-            method: 'POST',
-            body: formData,
+            if (data.success) {
+                const simpleUrl = `${window.location.origin}/${data.vanity}`;
+                document.getElementById('fileResult').innerHTML = `File uploaded. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
+            } else {
+                document.getElementById('fileResult').innerHTML = `Error: ${data.error}`;
+            }
         })
-        .then(response => response.json())
-        .then(data => {
-            document.getElementById('folderResult').innerHTML = `Folder uploaded. View its contents <a href="/${data.vanity}">here</a>.`;
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('fileResult').innerHTML = `An error occurred: ${error}`;
         });
     }
 
     function shortenUrl() {
-        const url = document.getElementById('urlInput').value;
+        const url = document.querySelector('#urlForm input[name="url"]').value;
         fetch('/shorten', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Type': 'application/json',
             },
-            body: new URLSearchParams({ url }),
+            body: JSON.stringify({ url: url }),
         })
         .then(response => response.json())
         .then(data => {
-            document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="/${data.vanity}">here</a>.`;
+            if (data.success) {
+                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${data.short_url}">${data.short_url}</a>`;
+            } else {
+                document.getElementById('urlResult').innerHTML = `Error: ${data.error}`;
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            document.getElementById('urlResult').innerHTML = `An error occurred: ${error}`;
         });
     }
-</script>
+    </script>
 </body>
+
 </html>
