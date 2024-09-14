@@ -11,5 +11,7 @@ CREATE TABLE IF NOT EXISTS content (
     data TEXT NOT NULL,
     created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     user_id INTEGER,
+    is_private INTEGER DEFAULT 0,
+    password TEXT,
     FOREIGN KEY (user_id) REFERENCES users (id)
 );

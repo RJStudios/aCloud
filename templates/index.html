@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -47,40 +48,54 @@
             margin: 4px 2px;
             cursor: pointer;
             border-radius: 4px;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
         }
-        .upload-form {
-            display: none;
-            background-color: #2a2a2a;
-            padding: 20px;
-            border-radius: 8px;
-            max-width: 400px;
-            width: 100%;
+        .upload-options button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
         }
-        .upload-form.active {
-            display: block;
+        .upload-options button:active {
+            transform: scale(0.95);
         }
-        .upload-form input[type="text"],
-        .upload-form input[type="file"],
-        .upload-form textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border-radius: 4px;
-            border: 1px solid #4CAF50;
-            background-color: #333;
-            color: #f0f0f0;
+        .upload-options button::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 5px;
+            height: 5px;
+            background: rgba(255, 255, 255, .5);
+            opacity: 0;
+            border-radius: 100%;
+            transform: scale(1, 1) translate(-50%);
+            transform-origin: 50% 50%;
         }
-        .upload-form button {
-            background-color: #4CAF50;
-            color: white;
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
+        @keyframes ripple {
+            0% {
+                transform: scale(0, 0);
+                opacity: 1;
+            }
+            20% {
+                transform: scale(25, 25);
+                opacity: 1;
+            }
+            100% {
+                opacity: 0;
+                transform: scale(40, 40);
+            }
         }
-        .result {
-            margin-top: 10px;
-            color: #4CAF50;
+        .upload-options button:focus:not(:active)::after {
+            animation: ripple 1s ease-out;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        .pulse {
+            animation: pulse 0.5s;
         }
         .footer {
             text-align: center;
@@ -94,6 +109,7 @@
             overflow: hidden;
             font-size: 1.2em;
             margin-bottom: 20px;
+            text-align: center;
         }
         .cursor {
             display: inline-block;
@@ -106,6 +122,88 @@
             0% { opacity: 0; }
             50% { opacity: 1; }
             100% { opacity: 0; }
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background-color: rgba(0,0,0,0.4);
+        }
+        .modal-content {
+            background-color: #2a2a2a;
+            margin: 15% auto;
+            padding: 20px 30px;
+            border: 1px solid #4CAF50;
+            width: 50%;
+            max-width: 500px;
+            border-radius: 8px;
+        }
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+        }
+        .close:hover,
+        .close:focus {
+            color: #4CAF50;
+            text-decoration: none;
+            cursor: pointer;
+        }
+        .upload-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: calc(100% - 44px);
+        }
+        .upload-area:hover {
+            background-color: #2d2d2d;
+        }
+        #fileInput {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+        textarea, input[type="text"], input[type="file"], input[type="password"] {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #333;
+            border: 1px solid #4CAF50;
+            color: #f0f0f0;
+            border-radius: 4px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
         }
     </style>
 </head>
@@ -126,35 +224,51 @@
         </div>
 
         <div class="upload-options">
-            <button onclick="showForm('text')">Upload Text</button>
-            <button onclick="showForm('file')">Upload File</button>
-            <button onclick="showForm('url')">Shorten URL</button>
+            <button onclick="openModal('textModal')">Upload Text</button>
+            <button onclick="openModal('fileModal')">Upload File</button>
+            <button onclick="openModal('urlModal')">Shorten URL</button>
         </div>
-        <div id="uploadFormContainer">
-            <div id="textForm" class="upload-form">
-                <h2>Upload Text</h2>
-                <form>
-                    <textarea name="content" rows="4" placeholder="Enter text here..."></textarea>
-                    <button type="button" onclick="uploadText()">Upload Text</button>
-                </form>
-                <div id="textResult" class="result"></div>
+    </div>
+
+    <div id="textModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('textModal')">&times;</span>
+            <h2>Upload Text</h2>
+            <textarea id="textContent" rows="4" placeholder="Enter text here..."></textarea>
+            <div>
+                <input type="checkbox" id="isPrivate" name="isPrivate">
+                <label for="isPrivate">Add password protection</label>
             </div>
-            <div id="fileForm" class="upload-form">
-                <h2>Upload File</h2>
-                <form enctype="multipart/form-data">
-                    <input type="file" name="file" />
-                    <button type="button" onclick="uploadFile()">Upload File</button>
-                </form>
-                <div id="fileResult" class="result"></div>
+            <div id="passwordField" style="display: none;">
+                <input type="password" id="textPassword" placeholder="Enter password">
             </div>
-            <div id="urlForm" class="upload-form">
-                <h2>Shorten URL</h2>
-                <form>
-                    <input type="text" name="url" placeholder="Enter URL here..." />
-                    <button type="button" onclick="shortenUrl()">Shorten URL</button>
-                </form>
-                <div id="urlResult" class="result"></div>
+            <button onclick="uploadText()">Upload Text</button>
+            <div id="textResult"></div>
+        </div>
+    </div>
+
+    <div id="fileModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('fileModal')">&times;</span>
+            <h2>Upload File</h2>
+            <div id="uploadArea" class="upload-area">
+                <p>Drag and drop files here or click to select files</p>
+                <input type="file" id="fileInput" multiple>
             </div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress"></div>
+            </div>
+            <div id="fileResult"></div>
+        </div>
+    </div>
+
+    <div id="urlModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeModal('urlModal')">&times;</span>
+            <h2>Shorten URL</h2>
+            <input type="text" id="urlInput" placeholder="Enter URL here...">
+            <button onclick="shortenUrl()">Shorten URL</button>
+            <div id="urlResult"></div>
         </div>
     </div>
 
@@ -168,7 +282,7 @@
     <script>
     document.addEventListener("DOMContentLoaded", function() {
         const message1 = "Welcome to aCloud.";
-        const message2 = "\n A simple toolbox for file uploading,\n URL shortening and pastebin.";
+        const message2 = "\nA simple toolbox for file uploading,\nURL shortening and pastebin.";
         const typewriterTextElement = document.getElementById('typewriter-text');
         const cursorElement = document.getElementById('cursor');
         const typingSpeed = 70;
@@ -184,7 +298,6 @@
                         typewriterTextElement.innerHTML += message[index]; 
                     }
                     index++;
-                    updateCursorPosition(); 
                     setTimeout(typeCharacter, typingSpeed);
                 } else if (callback) {
                     setTimeout(callback, typingSpeed);
@@ -194,99 +307,171 @@
             typeCharacter();
         }
 
-        function updateCursorPosition() {
-
-            const textRect = typewriterTextElement.getBoundingClientRect();
-            cursorElement.style.left = (textRect.width + textRect.left - cursorElement.offsetWidth) + 'px';
-        }
-
         typeMessage(message1, function() {
             typeMessage(message2);
         });
-    });;
+    });
 
-
-    document.getElementById('uploadForm').onsubmit = function(e) {
-        e.preventDefault();
-        var formData = new FormData(this);
-        var xhr = new XMLHttpRequest();
-        xhr.open('POST', '/upload/file', true);
-
-        xhr.upload.onprogress = function(e) {
-            if (e.lengthComputable) {
-                var percentComplete = (e.loaded / e.total) * 100;
-                document.getElementById('progressBar').style.display = 'block';
-                document.getElementById('progressBar').value = percentComplete;
-            }
-        };
-
-        xhr.onload = function() {
-            if (xhr.status === 200) {
-                alert('Upload complete!');
-                document.getElementById('progressBar').style.display = 'none';
+    function openModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const button = document.querySelector(`button[onclick="openModal('${modalId}')"]`);
+        
+        modal.style.display = "block";
+        button.classList.add('pulse');
+        
+        // Add ripple effect
+        button.classList.add('ripple');
+        setTimeout(() => {
+            button.classList.remove('ripple');
+        }, 1000);
+        
+        // Add fade-in animation to modal
+        modal.style.opacity = 0;
+        let opacity = 0;
+        const fadeIn = setInterval(() => {
+            if (opacity < 1) {
+                opacity += 0.1;
+                modal.style.opacity = opacity;
             } else {
-                alert('Upload failed.');
+                clearInterval(fadeIn);
             }
-        };
-        xhr.send(formData);
-    };
-
-    function showForm(type) {
-        document.querySelectorAll('.upload-form').forEach(form => {
-            form.classList.remove('active');
-        });
-        document.getElementById(type + 'Form').classList.add('active');
+        }, 30);
     }
 
+    function closeModal(modalId) {
+        const modal = document.getElementById(modalId);
+        const button = document.querySelector(`button[onclick="openModal('${modalId}')"]`);
+        
+        button.classList.remove('pulse');
+        
+        // Add fade-out animation to modal
+        let opacity = 1;
+        const fadeOut = setInterval(() => {
+            if (opacity > 0) {
+                opacity -= 0.1;
+                modal.style.opacity = opacity;
+            } else {
+                clearInterval(fadeOut);
+                modal.style.display = "none";
+            }
+        }, 30);
+    }
+
+    window.onclick = function(event) {
+        if (event.target.className === "modal") {
+            event.target.style.display = "none";
+        }
+    }
+
+    document.getElementById('isPrivate').addEventListener('change', function() {
+        document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';
+    });
+
     function uploadText() {
-        const content = document.querySelector('#textForm textarea').value;
+        const content = document.getElementById('textContent').value;
+        const isPrivate = document.getElementById('isPrivate').checked;
+        const password = isPrivate ? document.getElementById('textPassword').value : null;
+        
+        const data = {
+            content: content,
+            password: password
+        };
+
         fetch('/upload/pastebin', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ content: content }),
+            body: JSON.stringify(data),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
                 const simpleUrl = `${window.location.origin}/${data.vanity}`;
-                document.getElementById('textResult').innerHTML = `Pastebin created. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
+                document.getElementById('textResult').innerHTML = `Pastebin created. Access it <a href="${simpleUrl}" target="_blank">${simpleUrl}</a>`;
             } else {
                 document.getElementById('textResult').innerHTML = `Error: ${data.error}`;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('textResult').innerHTML = `An error occurred: ${error}`;
+            document.getElementById('textResult').innerHTML = `An error occurred: ${error.message}`;
         });
     }
 
-    function uploadFile() {
+    const uploadArea = document.getElementById('uploadArea');
+    const fileInput = document.getElementById('fileInput');
+    const progressBar = document.getElementById('progressBar');
+
+    uploadArea.addEventListener('click', () => fileInput.click());
+    uploadArea.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        uploadArea.style.backgroundColor = '#2d2d2d';
+    });
+    uploadArea.addEventListener('dragleave', () => {
+        uploadArea.style.backgroundColor = '';
+    });
+    uploadArea.addEventListener('drop', (e) => {
+        e.preventDefault();
+        uploadArea.style.backgroundColor = '';
+        handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    function handleFiles(files) {
+        for (let file of files) {
+            uploadFile(file);
+        }
+    }
+
+    function uploadFile(file) {
         const formData = new FormData();
-        const fileInput = document.querySelector('#fileForm input[type="file"]');
-        formData.append('file', fileInput.files[0]);
-        fetch('/upload/file', {
-            method: 'POST',
-            body: formData,
-        })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                const simpleUrl = `${window.location.origin}/${data.vanity}`;
-                document.getElementById('fileResult').innerHTML = `File uploaded. Access it <a href="${simpleUrl}">${simpleUrl}</a>`;
-            } else {
-                document.getElementById('fileResult').innerHTML = `Error: ${data.error}`;
+        formData.append('file', file);
+
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', '/upload/file', true);
+
+        xhr.upload.onprogress = (e) => {
+            if (e.lengthComputable) {
+                const percentComplete = (e.loaded / e.total) * 100;
+                progressBar.style.width = percentComplete + '%';
+                progressBar.textContent = percentComplete.toFixed(2) + '%';
             }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            document.getElementById('fileResult').innerHTML = `An error occurred: ${error}`;
-        });
+        };
+
+        xhr.onload = function() {
+            if (xhr.status === 200) {
+                const response = JSON.parse(xhr.responseText);
+                if (response.success) {
+                    document.getElementById('fileResult').innerHTML += `File uploaded: <a href="${response.url}" target="_blank">${response.url}</a><br>`;
+                } else {
+                    document.getElementById('fileResult').innerHTML += `Error: ${response.error}<br>`;
+                }
+            } else {
+                document.getElementById('fileResult').innerHTML += `Error uploading file: ${xhr.statusText}<br>`;
+            }
+            progressBar.style.width = '0%';
+            progressBar.textContent = '';
+        };
+
+        xhr.onerror = function() {
+            console.error('Error:', xhr.statusText);
+            document.getElementById('fileResult').innerHTML += `Error uploading file: ${xhr.statusText}<br>`;
+            progressBar.style.width = '0%';
+            progressBar.textContent = '';
+        };
+
+        xhr.send(formData);
     }
 
     function shortenUrl() {
-        const url = document.querySelector('#urlForm input[name="url"]').value;
+        const url = document.getElementById('urlInput').value;
+        
         fetch('/shorten', {
             method: 'POST',
             headers: {
@@ -294,20 +479,25 @@
             },
             body: JSON.stringify({ url: url }),
         })
-        .then(response => response.json())
+        .then(response => {
+            if (!response.ok) {
+                throw new Error('Network response was not ok');
+            }
+            return response.json();
+        })
         .then(data => {
             if (data.success) {
-                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${data.short_url}">${data.short_url}</a>`;
+                const shortUrl = `${window.location.origin}/${data.short_url}`;
+                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
             } else {
                 document.getElementById('urlResult').innerHTML = `Error: ${data.error}`;
             }
         })
         .catch(error => {
             console.error('Error:', error);
-            document.getElementById('urlResult').innerHTML = `An error occurred: ${error}`;
+            document.getElementById('urlResult').innerHTML = `An error occurred: ${error.message}`;
         });
     }
     </script>
 </body>
-
 </html>

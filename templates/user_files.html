@@ -5,13 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ username }}'s Dashboard</title>
     <style>
+        :root {
+            --bg-color: #1e1e1e;
+            --text-color: #e0e0e0;
+            --highlight-bg: #2d2d2d;
+            --highlight-border: #444;
+            --button-bg: #3a3a3a;
+            --button-text: #e0e0e0;
+        }
+
         body {
             font-family: Arial, sans-serif;
             line-height: 1.6;
             margin: 0;
             padding: 20px;
-            background-color: #1a1a1a;
-            color: #f0f0f0;
+            background-color: var(--bg-color);
+            color: var(--text-color);
             display: flex;
             justify-content: center;
         }
@@ -29,8 +38,8 @@
         }
         nav a, .btn {
             display: inline-block;
-            background-color: #4CAF50;
-            color: white;
+            background-color: var(--button-bg);
+            color: var(--button-text);
             padding: 8px 12px;
             text-decoration: none;
             border-radius: 4px;
@@ -40,7 +49,7 @@
             font-size: 14px;
         }
         nav a:hover, .btn:hover {
-            background-color: #45a049;
+            opacity: 0.8;
         }
         form {
             margin-bottom: 20px;
@@ -50,16 +59,16 @@
             padding: 8px;
             margin-right: 10px;
             border-radius: 4px;
-            border: 1px solid #4CAF50;
-            background-color: #333;
-            color: #f0f0f0;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
         }
         .file-list {
             list-style-type: none;
             padding: 0;
         }
         .file-item {
-            background-color: #2a2a2a;
+            background-color: var(--highlight-bg);
             padding: 10px;
             border-radius: 5px;
             margin-bottom: 5px;
@@ -92,8 +101,8 @@
             margin-bottom: 20px;
         }
         .tab {
-            background-color: #333;
-            color: #f0f0f0;
+            background-color: var(--button-bg);
+            color: var(--button-text);
             padding: 10px 20px;
             cursor: pointer;
             border: none;
@@ -118,7 +127,7 @@
             background-color: rgba(0,0,0,0.5);
         }
         .modal-content {
-            background-color: #2a2a2a;
+            background-color: var(--bg-color);
             margin: 15% auto;
             padding: 20px;
             border-radius: 8px;
@@ -130,9 +139,9 @@
             padding: 8px;
             margin: 10px 0;
             border-radius: 4px;
-            border: 1px solid #4CAF50;
-            background-color: #333;
-            color: #f0f0f0;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
         }
         .modal-buttons {
             display: flex;
@@ -153,7 +162,7 @@
         .file-item {
             border-radius: 0;
             margin-bottom: 0;
-            border-bottom: 1px solid #3a3a3a;
+            border-bottom: 1px solid var(--highlight-border);
         }
         .file-item:last-child {
             border-bottom: none;
@@ -161,6 +170,647 @@
         .file-actions .btn {
             padding: 4px 8px;
             font-size: 12px;
+        }
+        .btn-ok {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .btn-cancel {
+            background-color: #888;
+            color: white;
+        }
+        .btn-remove {
+            background-color: #f44336;
+            color: white;
+        }
+        a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--highlight-bg);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            padding: 12px 16px;
+            z-index: 1;
+            border-radius: 4px;
+        }
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+        .dropdown-content a:hover {
+            background-color: var(--button-bg);
+        }
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+        .dropbtn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 4px 8px;
+            font-size: 12px;
+            border: none;
+            cursor: pointer;
+        }
+        .dropbtn:hover {
+            opacity: 0.8;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            padding: 8px 12px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .dropdown:hover .dropbtn {
+            background-color: var(--highlight-bg);
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 120px;  /* Increased width */
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        input[type="text"], input[type="file"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-buttons .btn {
+            min-width: 150px;  /* Increased width for action buttons */
+        }
+
+        .upload-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .upload-item a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+
+        .upload-item a:hover {
+            text-decoration: underline;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 5px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            right: 0;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        /* Styles from index.html for file upload */
+        .upload-form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .upload-form input[type="file"] {
+            display: none;
+        }
+
+        .upload-form label {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-form label:hover {
+            background-color: #45a049;
+        }
+
+        .upload-form button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .upload-form button:hover {
+            background-color: #45a049;
+        }
+
+        .upload-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: calc(100% - 44px);
+        }
+        .upload-area:hover {
+            background-color: #2d2d2d;
+        }
+        #fileInput {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        /* Styles for the new upload modal */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .upload-modal-content {
+            background-color: var(--bg-color);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .upload-modal-input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
+        }
+        .upload-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .upload-modal-file-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .upload-modal-file-item {
+            background-color: var(--highlight-bg);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .upload-modal-file-icon {
+            margin-right: 10px;
+        }
+        .upload-modal-file-name {
+            flex-grow: 1;
+        }
+        .upload-modal-file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .upload-modal-file-item:last-child {
+            margin-bottom: 0;
+        }
+        .upload-modal-file-actions .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .upload-modal-btn-ok {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .upload-modal-btn-cancel {
+            background-color: #888;
+            color: white;
+        }
+        .upload-modal-btn-remove {
+            background-color: #f44336;
+            color: white;
+        }
+        .upload-modal-drop-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: calc(100% - 44px);
+        }
+        .upload-modal-drop-area:hover {
+            background-color: #2d2d2d;
+        }
+        .upload-modal-progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .upload-modal-progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        /* Styles for the dropdown menu */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .file-item, .upload-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: var(--highlight-bg);
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .file-name, .upload-info {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Ensure the dropdown is always on top */
+        .file-item, .upload-item {
+            position: relative;
+        }
+
+        .dropdown {
+            position: static;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+        }
+
+        /* New styles for adaptive positioning */
+        .file-list, .upload-list {
+            position: relative;
+        }
+
+        .file-item:last-child .dropdown-content,
+        .upload-item:last-child .dropdown-content {
+            bottom: 100%;
+            top: auto;
+        }
+
+        /* Media query for smaller screens */
+        @media screen and (max-height: 600px) {
+            .dropdown-content {
+                bottom: 100%;
+                top: auto;
+            }
+        }
+
+        .file-item, .upload-item {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: var(--highlight-bg);
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .file-name, .upload-info {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+        }
+
+        .dropdown {
+            position: relative;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            right: 0;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* New styles for adaptive positioning */
+        .file-list, .upload-list {
+            position: relative;
+        }
+
+        .dropdown-content {
+            bottom: auto;
+            top: 100%;
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* JavaScript will add this class when needed */
+        .dropdown-content.above {
+            bottom: 100%;
+            top: auto;
         }
     </style>
 </head>
@@ -172,7 +822,7 @@
             <a href="{{ url_for('logout') }}">Logout</a>
         </nav>
         <div style="text-align: center; margin-top: 10px;">
-            <a href="{{ url_for('serve_user_page', username=username) }}" class="btn">Visit my site</a>
+            <a href="{{ url_for('serve_user_page', username=username) }}" class="btn" style="min-width: 150px;">Visit my site</a>
         </div>
 
         <div class="tabs">
@@ -193,16 +843,10 @@
             <p style="text-align: center;">An index.html file exists in this folder. When viewing publicly, this file will be displayed instead of the file listing.</p>
             {% endif %}
 
-            <h3>Upload File</h3>
-            <form action="{{ url_for('upload_user_file', username=username) }}" method="post" enctype="multipart/form-data">
-                <input type="hidden" name="subpath" value="{{ current_path }}">
-                <input type="file" name="file" required>
-                <input type="submit" value="Upload" class="btn">
-            </form>
-
             <div class="action-buttons">
                 <button onclick="showModal('createFolder')" class="btn">Create Folder</button>
                 <button onclick="showModal('createFile')" class="btn">Create File</button>
+                <button onclick="showUploadModal()" class="btn">Upload File</button>
             </div>
 
             <h3>Files and Folders</h3>
@@ -227,14 +871,17 @@
                             {{ item.name }}
                         {% endif %}
                     </span>
-                    <div class="file-actions">
-                        <button onclick="showModal('rename', '{{ item.name }}', '{{ item.type }}')" class="btn">Rename</button>
-                        <button onclick="showModal('move', '{{ item.name }}', '{{ item.type }}')" class="btn">Move</button>
-                        <button onclick="showModal('copy', '{{ item.name }}', '{{ item.type }}')" class="btn">Copy</button>
-                        <button onclick="deleteItem('{{ item.name }}', '{{ item.type }}')" class="btn">Delete</button>
-                        {% if item.type == 'file' %}
-                            <a href="{{ url_for('edit_file', username=username, filename=item.path) }}" class="btn">Edit</a>
-                        {% endif %}
+                    <div class="dropdown">
+                        <button class="dropbtn">•••</button>
+                        <div class="dropdown-content">
+                            <a href="#" onclick="showModal('rename', '{{ item.name }}', '{{ item.type }}')">Rename</a>
+                            <a href="#" onclick="showModal('move', '{{ item.name }}', '{{ item.type }}')">Move</a>
+                            <a href="#" onclick="showModal('copy', '{{ item.name }}', '{{ item.type }}')">Copy</a>
+                            <a href="#" onclick="deleteItem('{{ item.name }}', '{{ item.type }}')">Delete</a>
+                            {% if item.type == 'file' %}
+                                <a href="{{ url_for('edit_file', username=username, filename=item.path) }}">Edit</a>
+                            {% endif %}
+                        </div>
                     </div>
                 </li>
             {% endfor %}
@@ -246,28 +893,42 @@
             <div class="upload-list">
                 {% for upload in uploads %}
                     <div class="upload-item">
-                        {% if upload.type == 'pastebin' %}
-                            Pastebin: 
-                        {% elif upload.type == 'file' %}
-                            File: 
-                        {% elif upload.type == 'url' %}
-                            Shortened URL: 
-                        {% endif %}
-                        <a href="{{ url_for('redirect_vanity', vanity=upload.vanity) }}" target="_blank">
-                            {% if upload.type == 'file' %}
-                                {{ upload.data }}
-                            {% else %}
-                                {{ upload.vanity }}
+                        <div class="upload-info">
+                            {% if upload.type == 'pastebin' %}
+                                Pastebin: 
+                            {% elif upload.type == 'file' %}
+                                File: 
+                            {% elif upload.type == 'url' %}
+                                Shortened URL: 
                             {% endif %}
-                        </a>
-                        (Created: {{ upload.created_at }})
-                        <a href="{{ url_for('content_info', vanity=upload.vanity) }}" class="btn">Info</a>
-                        {% if upload.type == 'url' %}
-                            <button onclick="editUrl('{{ upload.vanity }}', '{{ upload.data }}')" class="btn">Edit</button>
-                        {% else %}
-                            <a href="{{ url_for('edit_content', vanity=upload.vanity) }}" class="btn">Edit</a>
-                        {% endif %}
-                        <button onclick="deleteUpload('{{ upload.vanity }}')" class="btn">Delete</button>
+                            <a href="{{ url_for('redirect_vanity', vanity=upload.vanity) }}" target="_blank">
+                                {% if upload.type == 'file' %}
+                                    {{ upload.data }}
+                                {% else %}
+                                    {{ upload.vanity }}
+                                {% endif %}
+                            </a>
+                            (Created: {{ upload.created_at }})
+                        </div>
+                        <div class="dropdown">
+                            <button class="dropbtn">•••</button>
+                            <div class="dropdown-content">
+                                <a href="{{ url_for('content_info', vanity=upload.vanity) }}">Info</a>
+                                {% if upload.type == 'url' %}
+                                    <a href="#" onclick="editUrl('{{ upload.vanity }}', '{{ upload.data }}')">Edit</a>
+                                {% else %}
+                                    <a href="{{ url_for('edit_content', vanity=upload.vanity) }}">Edit</a>
+                                {% endif %}
+                                <a href="#" onclick="deleteUpload('{{ upload.vanity }}')">Delete</a>
+                                {% if upload.type == 'pastebin' %}
+                                    {% if upload.is_private %}
+                                        <a href="#" onclick="openEditPasswordModal('{{ upload.vanity }}')">Edit Password</a>
+                                    {% else %}
+                                        <a href="#" onclick="openAddPasswordModal('{{ upload.vanity }}')">Add Password</a>
+                                    {% endif %}
+                                {% endif %}
+                            </div>
+                        </div>
                     </div>
                 {% endfor %}
             </div>
@@ -309,6 +970,547 @@
             </div>
         </div>
     </div>
+
+    <div id="editPasswordModal" class="modal">
+        <div class="modal-content">
+            <h3 id="passwordModalTitle">Edit Password</h3>
+            <input type="password" id="newPassword1" placeholder="Enter new password">
+            <input type="password" id="newPassword2" placeholder="Confirm new password">
+            <div class="modal-buttons">
+                <button onclick="closePasswordModal()" class="btn-cancel">Cancel</button>
+                <button onclick="updatePassword()" class="btn-ok">OK</button>
+                <button onclick="removePassword()" class="btn-remove" id="removePasswordBtn">Remove Password</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="uploadModal" class="modal">
+        <div class="modal-content">
+            <span class="close" onclick="closeUploadModal()">&times;</span>
+            <h2>Upload File</h2>
+            <div id="uploadArea" class="upload-area">
+                <p>Drag and drop files here or click to select files</p>
+                <input type="file" id="fileInput" multiple>
+            </div>
+            <div class="progress-bar">
+                <div id="progressBar" class="progress"></div>
+            </div>
+            <div id="fileResult"></div>
+        </div>
+    </div>
+
+    <style>
+        :root {
+            --bg-color: #121212;
+            --text-color: #ffffff;
+            --highlight-bg: #333333;
+            --highlight-text: #ffffff;
+            --btn-bg: #4CAF50;
+            --btn-text: #ffffff;
+            --btn-hover-bg: #45a049;
+            --btn-hover-text: #ffffff;
+            --modal-bg: #222222;
+            --modal-text: #ffffff;
+            --modal-btn-bg: #4CAF50;
+            --modal-btn-text: #ffffff;
+            --modal-btn-hover-bg: #45a049;
+            --modal-btn-hover-text: #ffffff;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        h2 {
+            text-align: center;
+        }
+
+        nav {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        nav a {
+            color: var(--text-color);
+            text-decoration: none;
+            margin: 0 10px;
+        }
+
+        .tabs {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 20px;
+        }
+
+        .tab {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 14px 16px;
+            font-size: 17px;
+            width: 100%;
+            transition: background-color 0.3s;
+        }
+
+        .tab:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .tab.active {
+            background-color: var(--btn-bg);
+            color: var(--btn-text);
+        }
+
+        .tab-content {
+            display: none;
+            padding: 20px;
+            border: 1px solid var(--highlight-bg);
+            background-color: var(--modal-bg);
+            color: var(--modal-text);
+            border-radius: 5px;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 12px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin: 0 5px;
+            border: none;
+            cursor: pointer;
+            font-size: 14px;
+            min-width: 120px;  /* Increased width */
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #45a049;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+            margin-left: 10px;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px 10px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+            transition: background-color 0.3s ease;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        input[type="text"], input[type="file"], input[type="password"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
+            border-radius: 4px;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .upload-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .upload-item a {
+            color: #4CAF50;
+            text-decoration: none;
+            margin-right: 5px;
+        }
+
+        .upload-item a:hover {
+            text-decoration: underline;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 5px;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            right: 0;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .action-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin: 20px 0;
+        }
+
+        .action-buttons .btn {
+            flex: 1;
+            max-width: 200px;
+        }
+
+        .upload-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: calc(100% - 44px);
+        }
+        .upload-area:hover {
+            background-color: #2d2d2d;
+        }
+        #fileInput {
+            display: none;
+        }
+        .progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        /* Styles for the new upload modal */
+        .upload-modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+        }
+        .upload-modal-content {
+            background-color: var(--bg-color);
+            margin: 15% auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 300px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        }
+        .upload-modal-input {
+            width: 100%;
+            padding: 8px;
+            margin: 10px 0;
+            border-radius: 4px;
+            border: 1px solid var(--highlight-border);
+            background-color: var(--highlight-bg);
+            color: var(--text-color);
+        }
+        .upload-modal-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .upload-modal-file-list {
+            list-style-type: none;
+            padding: 0;
+            margin-top: 10px;
+        }
+        .upload-modal-file-item {
+            background-color: var(--highlight-bg);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        .upload-modal-file-icon {
+            margin-right: 10px;
+        }
+        .upload-modal-file-name {
+            flex-grow: 1;
+        }
+        .upload-modal-file-actions {
+            display: flex;
+            gap: 5px;
+        }
+        .upload-modal-file-item:last-child {
+            margin-bottom: 0;
+        }
+        .upload-modal-file-actions .btn {
+            padding: 4px 8px;
+            font-size: 12px;
+        }
+        .upload-modal-btn-ok {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .upload-modal-btn-cancel {
+            background-color: #888;
+            color: white;
+        }
+        .upload-modal-btn-remove {
+            background-color: #f44336;
+            color: white;
+        }
+        .upload-modal-drop-area {
+            border: 2px dashed #4CAF50;
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            margin-bottom: 20px;
+            width: calc(100% - 44px);
+        }
+        .upload-modal-drop-area:hover {
+            background-color: #2d2d2d;
+        }
+        .upload-modal-progress-bar {
+            width: 100%;
+            background-color: #333;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        .upload-modal-progress {
+            width: 0%;
+            height: 20px;
+            background-color: #4CAF50;
+            border-radius: 4px;
+            text-align: center;
+            line-height: 20px;
+            color: white;
+        }
+
+        /* Styles for the dropdown menu */
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        .file-item, .upload-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px;
+            background-color: var(--highlight-bg);
+            margin-bottom: 5px;
+            border-radius: 4px;
+        }
+
+        .file-name, .upload-info {
+            flex-grow: 1;
+            margin-right: 10px;
+            word-break: break-all;
+        }
+
+        .dropdown {
+            position: relative;
+            display: inline-block;
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
+        }
+
+        .dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1;
+            border-radius: 4px;
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
+        }
+
+        .dropdown:hover .dropdown-content {
+            display: block;
+        }
+
+        /* Ensure the dropdown is always on top */
+        .file-item, .upload-item {
+            position: relative;
+        }
+
+        .dropdown {
+            position: static;
+        }
+
+        .dropdown-content {
+            position: absolute;
+            top: 100%;
+            right: 0;
+        }
+
+        /* New styles for adaptive positioning */
+        .file-list, .upload-list {
+            position: relative;
+        }
+
+        .file-item:last-child .dropdown-content,
+        .upload-item:last-child .dropdown-content {
+            bottom: 100%;
+            top: auto;
+        }
+
+        /* Media query for smaller screens */
+        @media screen and (max-height: 600px) {
+            .dropdown-content {
+                bottom: 100%;
+                top: auto;
+            }
+        }
+    </style>
 
     <script>
         function openTab(evt, tabName) {
@@ -439,7 +1641,12 @@
             input.type = 'hidden';
             input.name = 'file_name';
             input.value = name;
+            const pathInput = document.createElement('input');
+            pathInput.type = 'hidden';
+            pathInput.name = 'subpath';
+            pathInput.value = '{{ current_path }}';
             form.appendChild(input);
+            form.appendChild(pathInput);
             document.body.appendChild(form);
             form.submit();
         }
@@ -447,17 +1654,32 @@
         function renameItem(oldName, type, newName) {
             const form = document.createElement('form');
             form.method = 'POST';
-            form.action = "{{ url_for('rename_user_file', username=username, subpath=current_path) }}";
+            form.action = "{{ url_for('rename_user_file', username=username) }}";
+            
             const oldInput = document.createElement('input');
             oldInput.type = 'hidden';
             oldInput.name = 'old_filename';
             oldInput.value = oldName;
+            
             const newInput = document.createElement('input');
             newInput.type = 'hidden';
             newInput.name = 'new_filename';
             newInput.value = newName;
+            
+            const typeInput = document.createElement('input');
+            typeInput.type = 'hidden';
+            typeInput.name = 'item_type';
+            typeInput.value = type;
+            
+            const currentPathInput = document.createElement('input');
+            currentPathInput.type = 'hidden';
+            currentPathInput.name = 'current_path';
+            currentPathInput.value = '{{ current_path }}';
+            
             form.appendChild(oldInput);
             form.appendChild(newInput);
+            form.appendChild(typeInput);
+            form.appendChild(currentPathInput);
             document.body.appendChild(form);
             form.submit();
         }
@@ -667,6 +1889,213 @@
             document.body.appendChild(form);
             form.submit();
         }
+
+        let currentVanity = '';
+
+        function openEditPasswordModal(vanity) {
+            currentVanity = vanity;
+            document.getElementById('passwordModalTitle').textContent = 'Edit Password';
+            document.getElementById('removePasswordBtn').style.display = 'inline-block';
+            document.getElementById('editPasswordModal').style.display = 'block';
+        }
+
+        function openAddPasswordModal(vanity) {
+            currentVanity = vanity;
+            document.getElementById('passwordModalTitle').textContent = 'Add Password';
+            document.getElementById('removePasswordBtn').style.display = 'none';
+            document.getElementById('editPasswordModal').style.display = 'block';
+        }
+
+        function closePasswordModal() {
+            document.getElementById('editPasswordModal').style.display = 'none';
+            document.getElementById('newPassword1').value = '';
+            document.getElementById('newPassword2').value = '';
+        }
+
+        function updatePassword() {
+            const password1 = document.getElementById('newPassword1').value;
+            const password2 = document.getElementById('newPassword2').value;
+
+            if (password1 !== password2) {
+                alert('Passwords do not match');
+                return;
+            }
+
+            fetch(`{{ url_for('edit_password', vanity='') }}${currentVanity}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    action: 'update',
+                    new_password: password1
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Password updated successfully');
+                    closePasswordModal();
+                    location.reload();  // Reload the page to reflect the changes
+                } else {
+                    alert('Error updating password: ' + data.error);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while updating the password');
+            });
+        }
+
+        function removePassword() {
+            if (confirm('Are you sure you want to remove the password?')) {
+                fetch(`{{ url_for('edit_password', vanity='') }}${currentVanity}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        action: 'remove'
+                    }),
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        alert('Password removed successfully');
+                        closePasswordModal();
+                        location.reload();  // Reload the page to reflect the changes
+                    } else {
+                        alert('Error removing password: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('An error occurred while removing the password');
+                });
+            }
+        }
+
+        function showUploadModal() {
+            document.getElementById('uploadModal').style.display = 'block';
+        }
+
+        function closeUploadModal() {
+            document.getElementById('uploadModal').style.display = 'none';
+        }
+
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const progressBar = document.getElementById('progressBar');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '#2d2d2d';
+        });
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.style.backgroundColor = '';
+        });
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.style.backgroundColor = '';
+            handleFiles(e.dataTransfer.files);
+        });
+        fileInput.addEventListener('change', () => handleFiles(fileInput.files));
+
+        function handleFiles(files) {
+            for (let file of files) {
+                uploadFile(file);
+            }
+        }
+
+        function uploadFile(file) {
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('subpath', '{{ current_path }}');
+
+            const xhr = new XMLHttpRequest();
+            xhr.open('POST', '{{ url_for("upload_user_file", username=username) }}', true);
+
+            xhr.upload.onprogress = (e) => {
+                if (e.lengthComputable) {
+                    const percentComplete = (e.loaded / e.total) * 100;
+                    progressBar.style.width = percentComplete + '%';
+                    progressBar.textContent = percentComplete.toFixed(2) + '%';
+                }
+            };
+
+            xhr.onload = function() {
+                if (xhr.status === 200) {
+                    const response = JSON.parse(xhr.responseText);
+                    if (response.success) {
+                        document.getElementById('fileResult').innerHTML += `File uploaded: ${file.name}<br>`;
+                        // Add the new file to the file list
+                        addFileToList(file.name);
+                        progressBar.style.width = '0%';
+                        progressBar.textContent = '';
+                    } else {
+                        document.getElementById('fileResult').innerHTML += `Error: ${response.error}<br>`;
+                    }
+                } else {
+                    document.getElementById('fileResult').innerHTML += `Error: ${xhr.statusText}<br>`;
+                }
+            };
+
+            xhr.send(formData);
+        }
+
+        function addFileToList(fileName) {
+            const fileList = document.querySelector('.file-list');
+            const newItem = document.createElement('li');
+            newItem.className = 'file-item';
+            newItem.innerHTML = `
+                <span class="file-icon">📄</span>
+                <span class="file-name">${fileName}</span>
+                <div class="dropdown">
+                    <button class="dropbtn">•••</button>
+                    <div class="dropdown-content">
+                        <a href="#" onclick="showModal('rename', '${fileName}', 'file')">Rename</a>
+                        <a href="#" onclick="showModal('move', '${fileName}', 'file')">Move</a>
+                        <a href="#" onclick="showModal('copy', '${fileName}', 'file')">Copy</a>
+                        <a href="#" onclick="deleteItem('${fileName}', 'file')">Delete</a>
+                        <a href="{{ url_for('edit_file', username=username, filename='') }}${fileName}">Edit</a>
+                    </div>
+                </div>
+            `;
+            fileList.appendChild(newItem);
+        }
+
+        // Close dropdowns when clicking outside
+        window.onclick = function(event) {
+            if (!event.target.matches('.dropbtn')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    var openDropdown = dropdowns[i];
+                    if (openDropdown.style.display === "block") {
+                        openDropdown.style.display = "none";
+                    }
+                }
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdowns = document.querySelectorAll('.dropdown');
+            
+            dropdowns.forEach(dropdown => {
+                const dropdownContent = dropdown.querySelector('.dropdown-content');
+                
+                dropdown.addEventListener('mouseenter', () => {
+                    const rect = dropdownContent.getBoundingClientRect();
+                    const spaceBelow = window.innerHeight - rect.bottom;
+                    
+                    if (spaceBelow < 10) { // Not enough space below
+                        dropdownContent.classList.add('above');
+                    } else {
+                        dropdownContent.classList.remove('above');
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

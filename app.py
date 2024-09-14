@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect, send_file, session, make_response, flash, g
+from flask import Flask, request, jsonify, send_from_directory, render_template, url_for, redirect, send_file, session, make_response, flash, g, Response, current_app
 from werkzeug.utils import secure_filename
 import shortuuid
 import os
@@ -37,30 +37,8 @@ def get_db():
 def init_db():
     with app.app_context():
         db = get_db()
-        cursor = db.cursor()
-        
-        # Create users table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS users (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                username TEXT UNIQUE NOT NULL,
-                password_hash TEXT NOT NULL,
-                api_key TEXT
-            )
-        ''')
-        
-        # Create content table
-        cursor.execute('''
-            CREATE TABLE IF NOT EXISTS content (
-                vanity TEXT PRIMARY KEY,
-                type TEXT NOT NULL,
-                data TEXT NOT NULL,
-                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                user_id INTEGER,
-                FOREIGN KEY (user_id) REFERENCES users (id)
-            )
-        ''')
-        
+        with app.open_resource('schema.sql', mode='r') as f:
+            db.cursor().executescript(f.read())
         db.commit()
         print("Database initialized with users and content tables.")
 
@@ -69,17 +47,23 @@ with app.app_context():
     init_db()
 
 def migrate_db():
-    db = get_db()
-    cursor = db.cursor()
-    
-    # Check if api_key column exists
-    cursor.execute("PRAGMA table_info(users)")
-    columns = [column[1] for column in cursor.fetchall()]
-    
-    if 'api_key' not in columns:
-        print("Adding api_key column to users table")
-        cursor.execute("ALTER TABLE users ADD COLUMN api_key TEXT")
-        db.commit()
+    with app.app_context():
+        db = get_db()
+        cursor = db.cursor()
+        
+        # Check if is_private column exists
+        cursor.execute("PRAGMA table_info(content)")
+        columns = [column[1] for column in cursor.fetchall()]
+        
+        if 'is_private' not in columns:
+            print("Adding is_private column to content table")
+            cursor.execute("ALTER TABLE content ADD COLUMN is_private INTEGER DEFAULT 0")
+            db.commit()
+
+# Call migrate_db() after init_db()
+with app.app_context():
+    init_db()
+    migrate_db()
 
 @app.teardown_appcontext
 def close_connection(exception):
@@ -142,16 +126,11 @@ class User(UserMixin):
 
     @staticmethod
     def hash_password(password):
-        salt = os.urandom(32)
-        key = hashlib.pbkdf2_hmac('sha256', password.encode('utf-8'), salt, 100000)
-        return salt + key
+        return password  # Store passwords in plaintext for simplicity
 
     @staticmethod
     def verify_password(stored_password, provided_password):
-        salt = stored_password[:32]
-        stored_key = stored_password[32:]
-        new_key = hashlib.pbkdf2_hmac('sha256', provided_password.encode('utf-8'), salt, 100000)
-        return stored_key == new_key
+        return stored_password == provided_password
 
     @staticmethod
     def generate_api_key():
@@ -250,62 +229,71 @@ def serve_user_page(username, filename=None):
                            parent_url=parent_url,
                            current_folder=current_folder)
 
-@app.route('/<vanity>')
-@app.route('/<vanity>/download')
+@app.route('/<vanity>', methods=['GET', 'POST'])
 def redirect_vanity(vanity):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+    cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
     
+    print(f"Fetched content for vanity {vanity}: {content}")
+    
     if content:
-        content_type, content_data, created_at, user_id = content[1], content[2], content[3], content[4]
+        content_type, content_data, created_at, user_id, is_private, password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
         
-        if content_type == 'file':
+        print(f"Debug - Vanity: {vanity}, Type: {content_type}, Is Private: {is_private}, Password: {password}")
+        print(f"User ID: {user_id}, Username: {username}")
+        
+        if content_type == 'url':
+            return redirect(content_data)
+        elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
-                if '/download' in request.path:
-                    return send_file(file_path, as_attachment=True)
-                else:
-                    # Embed the file if it's an image, video, or audio
-                    file_extension = os.path.splitext(content_data)[1].lower()
-                    if file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.svg']:
-                        return send_file(file_path, mimetype=f'image/{file_extension[1:]}')
-                    elif file_extension in ['.mp3', '.wav']:
-                        return send_file(file_path, mimetype=f'audio/{file_extension[1:]}')
-                    elif file_extension in ['.mp4', '.webm']:
-                        return send_file(file_path, mimetype=f'video/{file_extension[1:]}')
-                    else:
-                        # For other file types, send as attachment
-                        return send_file(file_path, as_attachment=True)
+                return send_file(file_path)
             else:
                 return "File not found", 404
-        elif content_type == 'url':
-            return redirect(content_data)
         elif content_type == 'pastebin':
-            try:
-                lexer = guess_lexer(content_data)
-                language = lexer.aliases[0]
-            except ClassNotFound:
-                language = 'text'
-                lexer = get_lexer_by_name(language)
-            
-            formatter = HtmlFormatter(style='monokai', linenos=True, cssclass="source")
-            highlighted_code = highlight(content_data, lexer, formatter)
-            css = formatter.get_style_defs('.source')
-            return render_template('content.html', 
-                                   content={
-                                       'user_id': user_id,
-                                       'username': get_username(user_id),
-                                       'created_at': created_at,
-                                       'vanity': vanity
-                                   },
-                                   highlighted_content=highlighted_code,
-                                   css=css, 
-                                   raw_content=content_data,
-                                   language=language,
-                                   url=None)  # Set url to None for pastebins
-    return render_template('404.html'), 404
+            if is_private:
+                if request.method == 'POST':
+                    entered_password = request.form.get('password')
+                    print(f"Entered password: {entered_password}")
+                    print(f"Stored password: {password}")
+                    if password and entered_password:
+                        if entered_password == password:
+                            print("Password match!")
+                            return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
+                        else:
+                            print("Password mismatch!")
+                            return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
+                    else:
+                        print(f"Missing password. Entered: {entered_password}, Stored: {password}")
+                        return render_template('password_prompt.html', vanity=vanity, error="An error occurred. Please try again.")
+                return render_template('password_prompt.html', vanity=vanity)
+            else:
+                return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
+    
+    return "Not found", 404
+
+def render_pastebin(content_data, created_at, user_id, username, vanity, is_private):
+    try:
+        lexer = guess_lexer(content_data)
+        language = lexer.aliases[0]
+    except ClassNotFound:
+        language = 'text'
+        lexer = get_lexer_by_name(language)
+    
+    formatter = HtmlFormatter(style='monokai', linenos=True, cssclass="source")
+    highlighted_code = highlight(content_data, lexer, formatter)
+    css = formatter.get_style_defs('.source')
+    return render_template('pastebin.html', 
+                           content={'data': content_data, 'user_id': user_id, 'username': username or 'Anonymous'},
+                           highlighted_content=highlighted_code,
+                           css=css, 
+                           raw_content=content_data,
+                           language=language,
+                           created_at=created_at,
+                           vanity=vanity,
+                           is_private=is_private)
 
 @app.route('/<vanity>/raw')
 def raw_vanity(vanity):
@@ -422,7 +410,8 @@ def user_files(username, subpath=''):
             'type': upload[1],
             'vanity': upload[0],
             'data': upload[2],
-            'created_at': upload[3]
+            'created_at': upload[3],
+            'is_private': upload[5]
         })
     
     parent_folder = os.path.dirname(subpath.rstrip('/')) if subpath else None
@@ -487,19 +476,6 @@ def delete_user_file(username, filename):
         return "Permission denied: Unable to delete the file or folder", 403
     except Exception as e:
         return f"An error occurred: {str(e)}", 500
-
-@app.route('/dash/<username>/rename', methods=['POST'])
-@login_required
-def rename_user_file(username):
-    if current_user.username != username:
-        return "Unauthorized", 401
-    old_filename = request.form['old_filename']
-    new_filename = secure_filename(request.form['new_filename'])
-    old_path = os.path.join(app.config['UPLOAD_FOLDER'], username, old_filename)
-    new_path = os.path.join(app.config['UPLOAD_FOLDER'], username, new_filename)
-    if os.path.exists(old_path):
-        os.rename(old_path, new_path)
-    return redirect(url_for('user_files', username=username))
 
 
 @app.route('/dash/<username>/delete_folder/<folder_name>', methods=['POST'])
@@ -570,7 +546,9 @@ def edit_file(username, filename):
         content = request.form['content']
         with open(file_path, 'w') as f:
             f.write(content)
-        return redirect(url_for('user_files', username=username))
+        # Get the directory path to redirect back to
+        dir_path = os.path.dirname(filename)
+        return redirect(url_for('user_files', username=username, subpath=dir_path))
 
     with open(file_path, 'r') as f:
         content = f.read()
@@ -588,55 +566,60 @@ def debug_users():
 @app.route('/upload/pastebin', methods=['POST'])
 def upload_pastebin():
     try:
+        print("Received request to upload pastebin")
         data = request.get_json()
+        print(f"Received JSON data: {data}")
+
         if not data or 'content' not in data:
+            print("Error: Content is missing from the request")
             return jsonify({'success': False, 'error': 'Content is required'}), 400
 
         content = data['content']
+        password = data.get('password')
+        print(f"Content: {content[:50]}...") # Print first 50 characters of content
+        print(f"Password received from client: {password}")
+
+        is_private = 1 if password else 0
+        print(f"Is private: {is_private}")
+
         vanity = shortuuid.uuid()[:8]
+        print(f"Generated vanity: {vanity}")
         
         user_id = current_user.id if current_user.is_authenticated else None
+        print(f"User ID: {user_id}")
         
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity, 'pastebin', content, datetime.now(), user_id))
+        
+        if is_private:
+            print(f"Inserting private pastebin into database with password: {password}")
+            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (vanity, 'pastebin', content, datetime.now(), user_id, is_private, password))
+            print(f"Executed SQL with values: {vanity}, pastebin, {content[:50]}..., {datetime.now()}, {user_id}, {is_private}, {password}")
+        else:
+            print("Inserting public pastebin into database")
+            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private) VALUES (?, ?, ?, ?, ?, ?)",
+                           (vanity, 'pastebin', content, datetime.now(), user_id, is_private))
+            print(f"Executed SQL with values: {vanity}, pastebin, {content[:50]}..., {datetime.now()}, {user_id}, {is_private}")
+        
         db.commit()
+        print("Database commit successful")
+        
+        # Verify the inserted data
+        cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+        inserted_data = cursor.fetchone()
+        print(f"Inserted data: {inserted_data}")
         
         short_url = url_for('redirect_vanity', vanity=vanity, _external=True)
         deletion_url = url_for('delete_content', vanity=vanity, _external=True)
+        print(f"Generated short URL: {short_url}")
+        print(f"Generated deletion URL: {deletion_url}")
+
         return jsonify({'success': True, 'vanity': vanity, 'url': short_url, 'deletion_url': deletion_url}), 200
     except Exception as e:
-        print("Exception occurred:", str(e))
-        return jsonify({'success': False, 'error': str(e)}), 400
+        print(f"Exception occurred in upload_pastebin: {str(e)}")
+        return jsonify({'success': False, 'error': str(e)}), 500
 
-@app.route('/upload/file', methods=['POST'])
-def upload_file():
-    if 'file' not in request.files:
-        return jsonify({'success': False, 'error': 'No file part'}), 400
-    file = request.files['file']
-    if file.filename == '':
-        return jsonify({'success': False, 'error': 'No selected file'}), 400
-    if file:
-        filename = secure_filename(file.filename)
-        extension = os.path.splitext(filename)[1].lower()
-        vanity = shortuuid.uuid()[:8]
-        vanity_with_extension = f"{vanity}{extension}"
-        new_filename = vanity_with_extension
-        file_path = os.path.join(app.config['UPLOAD_FOLDER'], new_filename)
-        file.save(file_path)
-        
-        user_id = current_user.id if current_user.is_authenticated else None
-        
-        db = get_db()
-        cursor = db.cursor()
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity_with_extension, 'file', new_filename, datetime.now(), user_id))
-        db.commit()
-        
-        short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True)
-        deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True)
-        return jsonify({'success': True, 'vanity': vanity_with_extension, 'url': short_url, 'deletion_url': deletion_url, 'filename': new_filename}), 200
 
 @app.route('/shorten', methods=['POST'])
 def shorten_url():
@@ -656,7 +639,7 @@ def shorten_url():
                        (vanity, 'url', long_url, datetime.now(), user_id))
         db.commit()
         
-        short_url = url_for('redirect_vanity', vanity=vanity, _external=True)
+        short_url = f"{request.host_url}{vanity}"
         return jsonify({'success': True, 'vanity': vanity, 'short_url': short_url}), 200
     except Exception as e:
         print("Exception occurred:", str(e))
@@ -692,6 +675,33 @@ def edit_content(vanity):
         return render_template('edit_content.html', content=content_data, vanity=content[0], content_type=content_type)
 
     return jsonify({'success': False, 'error': 'Unsupported content type for editing'}), 400
+
+@app.route('/edit_password/<vanity>', methods=['GET', 'POST'])
+@login_required
+def edit_password(vanity):
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+    content = cursor.fetchone()
+
+    if not content or content[4] != current_user.id:
+        return jsonify({'success': False, 'error': 'Unauthorized'}), 401
+
+    if request.method == 'POST':
+        data = request.get_json()
+        action = data.get('action')
+        if action == 'update':
+            new_password = data.get('new_password')
+            cursor.execute("UPDATE content SET password = ?, is_private = 1 WHERE vanity = ?", (new_password, vanity))
+            db.commit()
+            return jsonify({'success': True})
+        elif action == 'remove':
+            cursor.execute("UPDATE content SET is_private = 0, password = NULL WHERE vanity = ?", (vanity,))
+            db.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'error': 'Invalid action'})
+
+    return render_template('edit_password.html', vanity=vanity)
 
 @app.route('/delete/content/<vanity>', methods=['POST'])
 @login_required
@@ -817,7 +827,7 @@ def api_upload():
                 file.save(file_path)
                 
                 cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                               (new_filename, 'file', new_filename, datetime.now(), user[0]))
+                               (vanity, 'file', new_filename, datetime.now(), user[0]))
                 db.commit()
                 
                 url = url_for('redirect_vanity', vanity=new_filename, _external=True, _scheme='https')
@@ -952,6 +962,76 @@ def create_folder(username):
         else:
             flash(f"Error creating folder: {str(e)}", 'error')
             return redirect(url_for('user_files', username=username, subpath=subpath))
+
+@app.route('/dash/<username>/rename', methods=['POST'])
+@login_required
+def rename_user_file(username):
+    if current_user.username != username:
+        return "Unauthorized", 401
+    
+    old_filename = request.form['old_filename']
+    new_filename = secure_filename(request.form['new_filename'])
+    item_type = request.form['item_type']
+    current_path = request.form.get('current_path', '').rstrip('/')
+    
+    user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
+    full_current_path = os.path.join(user_folder, current_path)
+    
+    old_path = os.path.join(full_current_path, old_filename)
+    new_path = os.path.join(full_current_path, new_filename)
+    
+    if not os.path.exists(old_path):
+        flash(f"The {item_type} '{old_filename}' does not exist.", 'error')
+        return redirect(url_for('user_files', username=username, subpath=current_path))
+    
+    try:
+        os.rename(old_path, new_path)
+        flash(f"Successfully renamed {item_type} from '{old_filename}' to '{new_filename}'.", 'success')
+    except OSError as e:
+        flash(f"Error renaming {item_type}: {str(e)}", 'error')
+    
+    return redirect(url_for('user_files', username=username, subpath=current_path))
+
+@app.route('/upload/file', methods=['POST'])
+def upload_file():
+    if 'file' not in request.files:
+        return jsonify({'success': False, 'error': 'No file part'}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({'success': False, 'error': 'No selected file'}), 400
+    if file:
+        try:
+            filename = secure_filename(file.filename)
+            extension = os.path.splitext(filename)[1].lower()
+            vanity = shortuuid.uuid()[:8]
+            vanity_with_extension = f"{vanity}{extension}"
+            new_filename = vanity_with_extension
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
+            
+            file.save(file_path)
+            
+            user_id = current_user.id if current_user.is_authenticated else None
+            
+            db = get_db()
+            cursor = db.cursor()
+            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
+                           (vanity_with_extension, 'file', new_filename, datetime.now(), user_id))
+            db.commit()
+            
+            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True)
+            deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True)
+            
+            return jsonify({
+                'success': True,
+                'vanity': vanity_with_extension,
+                'url': short_url,
+                'deletion_url': deletion_url,
+                'filename': new_filename
+            })
+        except Exception as e:
+            return jsonify({'success': False, 'error': str(e)}), 500
+
+    return jsonify({'success': False, 'error': 'Unknown error occurred'}), 500
 
 if __name__ == '__main__':
     # Start the cleanup thread
