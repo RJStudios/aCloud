@@ -234,13 +234,23 @@ def serve_user_page(username, filename=None):
 @app.route('/<vanity>/download', methods=['GET', 'POST'])
 @app.route('/<vanity>/download/<password>', methods=['GET', 'POST'])
 def redirect_vanity(vanity, password=None):
+    app.logger.info(f"Accessing vanity: {vanity}, password: {password}")
     db = get_db()
     cursor = db.cursor()
+    
+    # First, try to find the content with the full vanity (including extension)
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
     
+    # If not found, try without the extension
+    if not content:
+        vanity_without_extension = os.path.splitext(vanity)[0]
+        cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity LIKE ?", (f"{vanity_without_extension}%",))
+        content = cursor.fetchone()
+    
     if content:
         content_type, content_data, created_at, user_id, is_private, stored_password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
+        app.logger.info(f"Content found: type={content_type}, data={content_data}, is_private={is_private}")
         
         if is_private and stored_password:
             if password:
@@ -253,23 +263,23 @@ def redirect_vanity(vanity, password=None):
             else:
                 return render_template('password_prompt.html', vanity=vanity, error=None)
         
-        # Remove '/download' from the content_data if present
-        content_data = content_data.replace('/download', '')
-        
         if content_type == 'url':
             return redirect(content_data)
         elif content_type == 'file':
-            file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
+            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], content_data)
+            app.logger.info(f"Attempting to serve file: {file_path}")
             if os.path.exists(file_path):
                 if 'download' in request.path:
                     return send_file(file_path, as_attachment=True)
                 else:
                     return send_file(file_path)
             else:
+                app.logger.error(f"File not found: {file_path}")
                 return "File not found", 404
         elif content_type == 'pastebin':
             return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
     
+    app.logger.error(f"Content not found for vanity: {vanity}")
     return "Not found", 404
 
 def render_pastebin(content_data, created_at, user_id, username, vanity, is_private):
@@ -1059,20 +1069,34 @@ def upload_file():
             db.commit()
             
             short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True)
-            # Remove '/download' suffix if it exists
             short_url = short_url.replace('/download', '')
             download_url = short_url + '/download'
             deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True)
             
-            return jsonify({
-                'success': True,
-                'vanity': vanity_with_extension,
-                'url': short_url,
-                'download_url': download_url,
-                'deletion_url': deletion_url,
-                'filename': new_filename
-            })
+            # Add debug logging
+            app.logger.info(f"File uploaded: {new_filename}")
+            app.logger.info(f"File path: {file_path}")
+            app.logger.info(f"Short URL: {short_url}")
+            app.logger.info(f"Download URL: {download_url}")
+            
+            # Check if the request is from ShareX
+            if 'X-API-Key' in request.headers:
+                return json.dumps({
+                    'status': 'success',
+                    'url': short_url,
+                    'deletion_url': deletion_url,
+                })
+            else:
+                return jsonify({
+                    'success': True,
+                    'vanity': vanity_with_extension,
+                    'url': short_url,
+                    'download_url': download_url,
+                    'deletion_url': deletion_url,
+                    'filename': new_filename
+                })
         except Exception as e:
+            app.logger.error(f"Error uploading file: {str(e)}")
             return jsonify({'success': False, 'error': str(e)}), 500
 
     return jsonify({'success': False, 'error': 'Unknown error occurred'}), 500
