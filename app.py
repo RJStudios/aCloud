@@ -230,47 +230,45 @@ def serve_user_page(username, filename=None):
                            current_folder=current_folder)
 
 @app.route('/<vanity>', methods=['GET', 'POST'])
-def redirect_vanity(vanity):
+@app.route('/<vanity>/<password>', methods=['GET', 'POST'])
+@app.route('/<vanity>/download', methods=['GET', 'POST'])
+@app.route('/<vanity>/download/<password>', methods=['GET', 'POST'])
+def redirect_vanity(vanity, password=None):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
     
-    print(f"Fetched content for vanity {vanity}: {content}")
-    
     if content:
-        content_type, content_data, created_at, user_id, is_private, password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
+        content_type, content_data, created_at, user_id, is_private, stored_password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
         
-        print(f"Debug - Vanity: {vanity}, Type: {content_type}, Is Private: {is_private}, Password: {password}")
-        print(f"User ID: {user_id}, Username: {username}")
+        if is_private and stored_password:
+            if password:
+                if password != stored_password:
+                    return "Incorrect password", 403
+            elif request.method == 'POST':
+                entered_password = request.form.get('password')
+                if entered_password != stored_password:
+                    return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
+            else:
+                return render_template('password_prompt.html', vanity=vanity, error=None)
+        
+        # Remove '/download' from the content_data if present
+        content_data = content_data.replace('/download', '')
         
         if content_type == 'url':
             return redirect(content_data)
         elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
-                return send_file(file_path)
+                if 'download' in request.path:
+                    return send_file(file_path, as_attachment=True)
+                else:
+                    return send_file(file_path)
             else:
                 return "File not found", 404
         elif content_type == 'pastebin':
-            if is_private:
-                if request.method == 'POST':
-                    entered_password = request.form.get('password')
-                    print(f"Entered password: {entered_password}")
-                    print(f"Stored password: {password}")
-                    if password and entered_password:
-                        if entered_password == password:
-                            print("Password match!")
-                            return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
-                        else:
-                            print("Password mismatch!")
-                            return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
-                    else:
-                        print(f"Missing password. Entered: {entered_password}, Stored: {password}")
-                        return render_template('password_prompt.html', vanity=vanity, error="An error occurred. Please try again.")
-                return render_template('password_prompt.html', vanity=vanity)
-            else:
-                return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
+            return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
     
     return "Not found", 404
 
@@ -295,17 +293,33 @@ def render_pastebin(content_data, created_at, user_id, username, vanity, is_priv
                            vanity=vanity,
                            is_private=is_private)
 
-@app.route('/<vanity>/raw')
-def raw_vanity(vanity):
+@app.route('/<vanity>/raw', methods=['GET', 'POST'])
+@app.route('/<vanity>/raw/<password>', methods=['GET'])
+def raw_vanity(vanity, password=None):
     db = get_db()
     cursor = db.cursor()
     cursor.execute("SELECT * FROM content WHERE vanity = ? AND type = 'pastebin'", (vanity,))
-    target = cursor.fetchone()
+    content = cursor.fetchone()
     
-    if target:
-        return target[2], 200, {'Content-Type': 'text/plain; charset=utf-8'}
+    if content:
+        content_type, content_data, created_at, user_id, is_private, stored_password = content[1], content[2], content[3], content[4], content[5], content[6]
+        
+        if is_private and stored_password:
+            if password:
+                if password != stored_password:
+                    return "Incorrect password", 403
+            elif request.method == 'POST':
+                entered_password = request.form.get('password')
+                if entered_password != stored_password:
+                    return render_template('password_prompt.html', vanity=vanity, error="Incorrect password", raw=True)
+            else:
+                return render_template('password_prompt.html', vanity=vanity, error=None, raw=True)
+        
+        # Remove '/download' from the content_data if present
+        content_data = content_data.replace('/download', '')
+        
+        return content_data, 200, {'Content-Type': 'text/plain; charset=utf-8'}
     return 'Not Found', 404
-
 # Replace the LoginForm and RegistrationForm classes with simple classes
 class LoginForm:
     def __init__(self, username, password, remember):
@@ -445,19 +459,34 @@ def toggle_index(username):
 @login_required
 def upload_user_file(username):
     if current_user.username != username:
-        return "Unauthorized", 401
+        return jsonify({"success": False, "error": "Unauthorized"}), 401
     subpath = request.form.get('subpath', '').rstrip('/')
     if 'file' not in request.files:
-        return 'No file part', 400
+        return jsonify({"success": False, "error": 'No file part'}), 400
     file = request.files['file']
     if file.filename == '':
-        return 'No selected file', 400
+        return jsonify({"success": False, "error": 'No selected file'}), 400
     if file:
         filename = secure_filename(file.filename)
         file_path = os.path.join(app.config['UPLOAD_FOLDER'], username, subpath, filename)
         os.makedirs(os.path.dirname(file_path), exist_ok=True)
-        file.save(file_path)
-        return redirect(url_for('user_files', username=username, subpath=subpath))
+        
+        # Use chunked upload
+        chunk_size = 4096  # 4KB chunks
+        try:
+            with open(file_path, 'wb') as f:
+                while True:
+                    chunk = file.stream.read(chunk_size)
+                    if not chunk:
+                        break
+                    f.write(chunk)
+            
+            return jsonify({"success": True, "filename": filename}), 200
+        except Exception as e:
+            app.logger.error(f"Error uploading file: {str(e)}")
+            return jsonify({"success": False, "error": str(e)}), 500
+    
+    return jsonify({"success": False, "error": "File upload failed"}), 500
 
 @app.route('/dash/<username>/delete/<path:filename>', methods=['POST'])
 @login_required
@@ -639,8 +668,8 @@ def shorten_url():
                        (vanity, 'url', long_url, datetime.now(), user_id))
         db.commit()
         
-        short_url = f"{request.host_url}{vanity}"
-        return jsonify({'success': True, 'vanity': vanity, 'short_url': short_url}), 200
+        # Return only the vanity code, not the full URL
+        return jsonify({'success': True, 'vanity': vanity}), 200
     except Exception as e:
         print("Exception occurred:", str(e))
         return jsonify({'success': False, 'error': str(e)}), 400
@@ -676,7 +705,7 @@ def edit_content(vanity):
 
     return jsonify({'success': False, 'error': 'Unsupported content type for editing'}), 400
 
-@app.route('/edit_password/<vanity>', methods=['GET', 'POST'])
+@app.route('/edit_password/<vanity>', methods=['POST'])
 @login_required
 def edit_password(vanity):
     db = get_db()
@@ -687,21 +716,20 @@ def edit_password(vanity):
     if not content or content[4] != current_user.id:
         return jsonify({'success': False, 'error': 'Unauthorized'}), 401
 
-    if request.method == 'POST':
-        data = request.get_json()
-        action = data.get('action')
-        if action == 'update':
-            new_password = data.get('new_password')
-            cursor.execute("UPDATE content SET password = ?, is_private = 1 WHERE vanity = ?", (new_password, vanity))
-            db.commit()
-            return jsonify({'success': True})
-        elif action == 'remove':
-            cursor.execute("UPDATE content SET is_private = 0, password = NULL WHERE vanity = ?", (vanity,))
-            db.commit()
-            return jsonify({'success': True})
-        return jsonify({'success': False, 'error': 'Invalid action'})
+    data = request.get_json()
+    action = data.get('action')
+    if action == 'update':
+        new_password = data.get('new_password')
+        if not is_valid_password(new_password):
+            return jsonify({'success': False, 'error': 'Invalid password'}), 400
+        cursor.execute("UPDATE content SET password = ?, is_private = 1 WHERE vanity = ?", (new_password, vanity))
+    elif action == 'remove':
+        cursor.execute("UPDATE content SET is_private = 0, password = NULL WHERE vanity = ?", (vanity,))
+    else:
+        return jsonify({'success': False, 'error': 'Invalid action'}), 400
 
-    return render_template('edit_password.html', vanity=vanity)
+    db.commit()
+    return jsonify({'success': True})
 
 @app.route('/delete/content/<vanity>', methods=['POST'])
 @login_required
@@ -725,7 +753,7 @@ def delete_content(vanity):
 
     return jsonify({'success': True}), 200
 
-@app.route('/<vanity>/info')
+@app.route('/<vanity>/info', methods=['GET', 'POST'])
 def content_info(vanity):
     db = get_db()
     cursor = db.cursor()
@@ -733,7 +761,15 @@ def content_info(vanity):
     content = cursor.fetchone()
     
     if content:
-        content_type, content_data, created_at, user_id = content[1], content[2], content[3], content[4]
+        content_type, content_data, created_at, user_id, is_private, password = content[1], content[2], content[3], content[4], content[5], content[6]
+        
+        if is_private and password:
+            if request.method == 'POST':
+                entered_password = request.form.get('password')
+                if entered_password != password:
+                    return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
+            else:
+                return render_template('password_prompt.html', vanity=vanity, error=None)
         
         username = get_username(user_id)
         
@@ -753,7 +789,8 @@ def content_info(vanity):
             'created_at': created_at,
             'username': username,
             'file_size': file_size,
-            'is_media': is_media
+            'is_media': is_media,
+            'is_private': is_private
         }
         
         return render_template('content_info.html', info=info)
@@ -1012,19 +1049,26 @@ def upload_file():
             
             user_id = current_user.id if current_user.is_authenticated else None
             
+            password = request.form.get('password')
+            is_private = 1 if password else 0
+            
             db = get_db()
             cursor = db.cursor()
-            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                           (vanity_with_extension, 'file', new_filename, datetime.now(), user_id))
+            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (vanity_with_extension, 'file', new_filename, datetime.now(), user_id, is_private, password))
             db.commit()
             
             short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True)
+            # Remove '/download' suffix if it exists
+            short_url = short_url.replace('/download', '')
+            download_url = short_url + '/download'
             deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True)
             
             return jsonify({
                 'success': True,
                 'vanity': vanity_with_extension,
                 'url': short_url,
+                'download_url': download_url,
                 'deletion_url': deletion_url,
                 'filename': new_filename
             })
@@ -1032,6 +1076,11 @@ def upload_file():
             return jsonify({'success': False, 'error': str(e)}), 500
 
     return jsonify({'success': False, 'error': 'Unknown error occurred'}), 500
+
+# Add this function to validate passwords
+def is_valid_password(password):
+    banned_passwords = ['info', 'download']
+    return password not in banned_passwords
 
 if __name__ == '__main__':
     # Start the cleanup thread

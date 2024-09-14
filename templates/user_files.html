@@ -66,6 +66,8 @@
         .file-list {
             list-style-type: none;
             padding: 0;
+            position: relative;
+            z-index: 1;
         }
         .file-item {
             background-color: var(--highlight-bg);
@@ -75,6 +77,8 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            position: relative;
+            z-index: 2;
         }
         .file-icon {
             margin-right: 10px;
@@ -250,7 +254,7 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
         }
 
@@ -310,11 +314,10 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            right: 0;
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
             overflow: hidden;
         }
@@ -398,7 +401,7 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             right: 0;
             border-radius: 4px;
         }
@@ -624,11 +627,10 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            right: 0;
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
         }
 
@@ -647,63 +649,6 @@
             display: block;
         }
 
-        .file-item, .upload-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 10px;
-            background-color: var(--highlight-bg);
-            margin-bottom: 5px;
-            border-radius: 4px;
-        }
-
-        .file-name, .upload-info {
-            flex-grow: 1;
-            margin-right: 10px;
-            word-break: break-all;
-        }
-
-        .dropdown {
-            position: relative;
-            display: inline-block;
-        }
-
-        .dropbtn {
-            background-color: transparent;
-            color: var(--text-color);
-            padding: 5px;
-            font-size: 16px;
-            border: none;
-            cursor: pointer;
-        }
-
-        .dropdown-content {
-            display: none;
-            position: absolute;
-            right: 0;
-            background-color: var(--bg-color);
-            min-width: 160px;
-            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
-            border-radius: 4px;
-        }
-
-        .dropdown-content a {
-            color: var(--text-color);
-            padding: 12px 16px;
-            text-decoration: none;
-            display: block;
-        }
-
-        .dropdown-content a:hover {
-            background-color: var(--highlight-bg);
-        }
-
-        .dropdown:hover .dropdown-content {
-            display: block;
-        }
-
-        /* Ensure the dropdown is always on top */
         .file-item, .upload-item {
             position: relative;
         }
@@ -725,15 +670,15 @@
 
         .file-item:last-child .dropdown-content,
         .upload-item:last-child .dropdown-content {
-            bottom: 100%;
-            top: auto;
+            bottom: auto;
+            top: 100%;
         }
 
         /* Media query for smaller screens */
         @media screen and (max-height: 600px) {
             .dropdown-content {
-                bottom: 100%;
-                top: auto;
+                bottom: auto;
+                top: 100%;
             }
         }
 
@@ -773,9 +718,10 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 9999;
             border-radius: 4px;
             right: 0;
+            margin-top: 2px; /* Add a small gap between button and dropdown */
         }
 
         .dropdown-content a {
@@ -793,24 +739,131 @@
             display: block;
         }
 
-        /* New styles for adaptive positioning */
-        .file-list, .upload-list {
+        /* Ensure the dropdown is always on top */
+        .file-item:hover, .upload-item:hover {
+            z-index: 1001;
+        }
+
+        .dropdown:hover {
+            z-index: 1002;
+        }
+
+        /* Styles for the collapsible file groups */
+        .file-group {
+            margin-bottom: 10px;
+            border: 1px solid var(--highlight-border);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .file-group-header {
+            display: flex;
+            align-items: center;
+            background-color: var(--highlight-bg);
+            padding: 10px;
+            cursor: pointer;
+        }
+
+        .file-group-arrow {
+            margin-right: 10px;
+            font-size: 16px;
+            transition: transform 0.3s;
+        }
+
+        .file-group-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .file-group-content.expanded {
+            display: block;
+        }
+
+        .file-group-links {
+            margin-top: 10px;
+        }
+
+        .file-group-link {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .file-group-link a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .file-group-link a:hover {
+            text-decoration: underline;
+        }
+
+        .file-list {
             position: relative;
+            z-index: 1;
+        }
+
+        .file-item {
+            position: relative;
+            z-index: 2;
+        }
+
+        .dropdown {
+            position: relative;
+            z-index: 1000; /* Increased z-index */
+        }
+
+        .dropbtn {
+            background-color: transparent;
+            color: var(--text-color);
+            padding: 5px;
+            font-size: 16px;
+            border: none;
+            cursor: pointer;
         }
 
         .dropdown-content {
-            bottom: auto;
+            display: none;
+            position: absolute;
+            right: 0;
             top: 100%;
+            background-color: var(--bg-color);
+            min-width: 160px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 1001; /* Increased z-index */
+            border-radius: 4px;
+            overflow: visible; /* Changed from hidden to visible */
+        }
+
+        .dropdown-content a {
+            color: var(--text-color);
+            padding: 12px 16px;
+            text-decoration: none;
+            display: block;
+        }
+
+        .dropdown-content a:hover {
+            background-color: var(--highlight-bg);
         }
 
         .dropdown:hover .dropdown-content {
             display: block;
         }
 
-        /* JavaScript will add this class when needed */
-        .dropdown-content.above {
-            bottom: 100%;
-            top: auto;
+        /* Ensure the dropdown is always on top */
+        .file-item:hover,
+        .upload-item:hover {
+            z-index: 1002; /* Increased z-index */
+        }
+
+        .dropdown:hover {
+            z-index: 1003; /* Increased z-index */
+        }
+
+        /* Remove any max-height or overflow properties on parent containers */
+        .tab-content,
+        .file-list,
+        .upload-list {
+            overflow: visible;
+            max-height: none;
         }
     </style>
 </head>
@@ -920,12 +973,10 @@
                                     <a href="{{ url_for('edit_content', vanity=upload.vanity) }}">Edit</a>
                                 {% endif %}
                                 <a href="#" onclick="deleteUpload('{{ upload.vanity }}')">Delete</a>
-                                {% if upload.type == 'pastebin' %}
-                                    {% if upload.is_private %}
-                                        <a href="#" onclick="openEditPasswordModal('{{ upload.vanity }}')">Edit Password</a>
-                                    {% else %}
-                                        <a href="#" onclick="openAddPasswordModal('{{ upload.vanity }}')">Add Password</a>
-                                    {% endif %}
+                                {% if upload.is_private %}
+                                    <a href="#" onclick="openEditPasswordModal('{{ upload.vanity }}')">Edit Password</a>
+                                {% else %}
+                                    <a href="#" onclick="openAddPasswordModal('{{ upload.vanity }}')">Add Password</a>
                                 {% endif %}
                             </div>
                         </div>
@@ -971,7 +1022,7 @@
         </div>
     </div>
 
-    <div id="editPasswordModal" class="modal">
+    <div id="passwordModal" class="modal">
         <div class="modal-content">
             <h3 id="passwordModalTitle">Edit Password</h3>
             <input type="password" id="newPassword1" placeholder="Enter new password">
@@ -1096,8 +1147,7 @@
             margin: 0 5px;
             border: none;
             cursor: pointer;
-            font-size: 14px;
-            min-width: 120px;  /* Increased width */
+            font-size: 14px;  /* Increased width */
             text-align: center;
         }
 
@@ -1123,13 +1173,14 @@
         .dropdown-content {
             display: none;
             position: absolute;
-            right: 0;
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
             overflow: hidden;
+            right: 0;
+            top: 100%;
         }
 
         .dropdown-content a {
@@ -1212,7 +1263,7 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             right: 0;
             border-radius: 4px;
         }
@@ -1402,7 +1453,7 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
         }
 
@@ -1458,7 +1509,7 @@
             background-color: var(--bg-color);
             min-width: 160px;
             box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
-            z-index: 1;
+            z-index: 1000;
             border-radius: 4px;
         }
 
@@ -1478,37 +1529,65 @@
         }
 
         /* Ensure the dropdown is always on top */
-        .file-item, .upload-item {
-            position: relative;
+        .file-item:hover, .upload-item:hover {
+            z-index: 1001;
         }
 
-        .dropdown {
-            position: static;
+        .dropdown:hover {
+            z-index: 1002;
         }
 
-        .dropdown-content {
-            position: absolute;
-            top: 100%;
-            right: 0;
+        /* Styles for the collapsible file groups */
+        .file-group {
+            margin-bottom: 10px;
+            border: 1px solid var(--highlight-border);
+            border-radius: 4px;
+            overflow: hidden;
         }
 
-        /* New styles for adaptive positioning */
-        .file-list, .upload-list {
-            position: relative;
+        .file-group-header {
+            display: flex;
+            align-items: center;
+            background-color: var(--highlight-bg);
+            padding: 10px;
+            cursor: pointer;
         }
 
-        .file-item:last-child .dropdown-content,
-        .upload-item:last-child .dropdown-content {
-            bottom: 100%;
-            top: auto;
+        .file-group-arrow {
+            margin-right: 10px;
+            font-size: 16px;
+            transition: transform 0.3s;
         }
 
-        /* Media query for smaller screens */
-        @media screen and (max-height: 600px) {
-            .dropdown-content {
-                bottom: 100%;
-                top: auto;
-            }
+        .file-group-arrow.collapsed {
+            transform: rotate(-90deg);
+        }
+
+        .file-group-content {
+            display: none;
+            padding: 10px;
+        }
+
+        .file-group-content.expanded {
+            display: block;
+        }
+
+        .file-group-links {
+            margin-top: 10px;
+        }
+
+        .file-group-link {
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .file-group-link a {
+            color: var(--text-color);
+            text-decoration: none;
+        }
+
+        .file-group-link a:hover {
+            text-decoration: underline;
         }
     </style>
 
@@ -1896,18 +1975,18 @@
             currentVanity = vanity;
             document.getElementById('passwordModalTitle').textContent = 'Edit Password';
             document.getElementById('removePasswordBtn').style.display = 'inline-block';
-            document.getElementById('editPasswordModal').style.display = 'block';
+            document.getElementById('passwordModal').style.display = 'block';
         }
 
         function openAddPasswordModal(vanity) {
             currentVanity = vanity;
             document.getElementById('passwordModalTitle').textContent = 'Add Password';
             document.getElementById('removePasswordBtn').style.display = 'none';
-            document.getElementById('editPasswordModal').style.display = 'block';
+            document.getElementById('passwordModal').style.display = 'block';
         }
 
         function closePasswordModal() {
-            document.getElementById('editPasswordModal').style.display = 'none';
+            document.getElementById('passwordModal').style.display = 'none';
             document.getElementById('newPassword1').value = '';
             document.getElementById('newPassword2').value = '';
         }
@@ -2026,19 +2105,31 @@
 
             xhr.onload = function() {
                 if (xhr.status === 200) {
-                    const response = JSON.parse(xhr.responseText);
-                    if (response.success) {
+                    try {
+                        const response = JSON.parse(xhr.responseText);
+                        if (response.success) {
+                            document.getElementById('fileResult').innerHTML += `File uploaded: ${file.name}<br>`;
+                            addFileToList(file.name);
+                        } else {
+                            document.getElementById('fileResult').innerHTML += `Error: ${response.error}<br>`;
+                        }
+                    } catch (error) {
+                        console.error('Error parsing JSON:', error);
                         document.getElementById('fileResult').innerHTML += `File uploaded: ${file.name}<br>`;
-                        // Add the new file to the file list
                         addFileToList(file.name);
-                        progressBar.style.width = '0%';
-                        progressBar.textContent = '';
-                    } else {
-                        document.getElementById('fileResult').innerHTML += `Error: ${response.error}<br>`;
                     }
                 } else {
                     document.getElementById('fileResult').innerHTML += `Error: ${xhr.statusText}<br>`;
                 }
+                progressBar.style.width = '0%';
+                progressBar.textContent = '';
+            };
+
+            xhr.onerror = function() {
+                console.error('Error:', xhr.statusText);
+                document.getElementById('fileResult').innerHTML += `Error uploading file: ${xhr.statusText}<br>`;
+                progressBar.style.width = '0%';
+                progressBar.textContent = '';
             };
 
             xhr.send(formData);
@@ -2082,16 +2173,17 @@
             const dropdowns = document.querySelectorAll('.dropdown');
             
             dropdowns.forEach(dropdown => {
+                const dropbtn = dropdown.querySelector('.dropbtn');
                 const dropdownContent = dropdown.querySelector('.dropdown-content');
                 
-                dropdown.addEventListener('mouseenter', () => {
-                    const rect = dropdownContent.getBoundingClientRect();
-                    const spaceBelow = window.innerHeight - rect.bottom;
-                    
-                    if (spaceBelow < 10) { // Not enough space below
-                        dropdownContent.classList.add('above');
-                    } else {
-                        dropdownContent.classList.remove('above');
+                dropbtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    dropdownContent.style.display = dropdownContent.style.display === 'block' ? 'none' : 'block';
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!dropdown.contains(e.target)) {
+                        dropdownContent.style.display = 'none';
                     }
                 });
             });

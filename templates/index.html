@@ -205,6 +205,59 @@
         button:hover {
             background-color: #45a049;
         }
+
+        .file-group {
+            border: 1px solid #4CAF50;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            overflow: hidden;
+        }
+
+        .file-group-header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .file-group-header span:first-child {
+            margin-right: 10px;
+        }
+
+        .file-group-header span:nth-child(2) {
+            flex-grow: 1;
+            text-align: left;
+        }
+
+        .file-group-content {
+            padding: 10px;
+            display: none;
+        }
+
+        .file-group-content.show {
+            display: block;
+        }
+
+        .other-links-btn {
+            background-color: #45a049;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 3px;
+            cursor: pointer;
+        }
+
+        .other-links {
+            margin-top: 10px;
+            display: none;
+        }
+
+        .other-links.show {
+            display: block;
+        }
     </style>
 </head>
 <body>
@@ -255,6 +308,15 @@
                 <p>Drag and drop files here or click to select files</p>
                 <input type="file" id="fileInput" multiple>
             </div>
+            <div id="selectedFiles"></div>
+            <div>
+                <input type="checkbox" id="fileIsPrivate" name="fileIsPrivate">
+                <label for="fileIsPrivate">Add password protection</label>
+            </div>
+            <div id="filePasswordField" style="display: none;">
+                <input type="password" id="filePassword" placeholder="Enter password">
+            </div>
+            <button onclick="uploadSelectedFiles()">Upload</button>
             <div class="progress-bar">
                 <div id="progressBar" class="progress"></div>
             </div>
@@ -367,6 +429,10 @@
         document.getElementById('passwordField').style.display = this.checked ? 'block' : 'none';
     });
 
+    document.getElementById('fileIsPrivate').addEventListener('change', function() {
+        document.getElementById('filePasswordField').style.display = this.checked ? 'block' : 'none';
+    });
+
     function uploadText() {
         const content = document.getElementById('textContent').value;
         const isPrivate = document.getElementById('isPrivate').checked;
@@ -407,6 +473,8 @@
     const uploadArea = document.getElementById('uploadArea');
     const fileInput = document.getElementById('fileInput');
     const progressBar = document.getElementById('progressBar');
+    const selectedFiles = document.getElementById('selectedFiles');
+    let filesToUpload = [];
 
     uploadArea.addEventListener('click', () => fileInput.click());
     uploadArea.addEventListener('dragover', (e) => {
@@ -424,14 +492,33 @@
     fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
 
     function handleFiles(files) {
-        for (let file of files) {
-            uploadFile(file);
-        }
+        filesToUpload = Array.from(files);
+        updateSelectedFilesList();
     }
 
-    function uploadFile(file) {
+    function updateSelectedFilesList() {
+        selectedFiles.innerHTML = filesToUpload.map(file => `<div>${file.name}</div>`).join('');
+    }
+
+    function uploadSelectedFiles() {
+        const isPrivate = document.getElementById('fileIsPrivate').checked;
+        const password = isPrivate ? document.getElementById('filePassword').value : null;
+
+        filesToUpload.forEach(file => uploadFile(file, isPrivate, password));
+    }
+
+    function uploadFile(file, isPrivate, password) {
+        if (isPrivate && (password === 'info' || password === 'download')) {
+            document.getElementById('fileResult').innerHTML += `Error: Password cannot be 'info' or 'download'<br>`;
+            return;
+        }
+
         const formData = new FormData();
         formData.append('file', file);
+        
+        if (isPrivate && password) {
+            formData.append('password', password);
+        }
 
         const xhr = new XMLHttpRequest();
         xhr.open('POST', '/upload/file', true);
@@ -448,7 +535,37 @@
             if (xhr.status === 200) {
                 const response = JSON.parse(xhr.responseText);
                 if (response.success) {
-                    document.getElementById('fileResult').innerHTML += `File uploaded: <a href="${response.url}" target="_blank">${response.url}</a><br>`;
+                    let resultHtml = `
+                        <div class="file-group">
+                            <div class="file-group-header" onclick="toggleFileGroup(this)">
+                                <span>▼</span>
+                                <span>${file.name}</span>
+                                <button class="other-links-btn" onclick="toggleOtherLinks(event, this)">Other Links</button>
+                            </div>
+                            <div class="file-group-content show">
+                                <p>File uploaded: <a href="${response.url}" target="_blank">${response.url}</a></p>
+                                <div class="other-links">
+                    `;
+
+                    if (isPrivate) {
+                        resultHtml += `
+                            <p>Password-protected link: <a href="${response.url}/${password}" target="_blank">${response.url}/${password}</a></p>
+                            <p>Direct download link: <a href="${response.download_url}" target="_blank">${response.download_url}</a></p>
+                            <p>Password-protected direct download link: <a href="${response.download_url}/${password}" target="_blank">${response.download_url}/${password}</a></p>
+                        `;
+                    } else {
+                        resultHtml += `
+                            <p>Direct download link: <a href="${response.download_url}" target="_blank">${response.download_url}</a></p>
+                        `;
+                    }
+
+                    resultHtml += `
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    document.getElementById('fileResult').innerHTML += resultHtml;
                 } else {
                     document.getElementById('fileResult').innerHTML += `Error: ${response.error}<br>`;
                 }
@@ -469,6 +586,26 @@
         xhr.send(formData);
     }
 
+    function toggleFileGroup(header) {
+        const content = header.nextElementSibling;
+        const arrow = header.querySelector('span:first-child');
+        const filename = header.querySelector('span:nth-child(2)');
+        content.classList.toggle('show');
+        if (content.classList.contains('show')) {
+            arrow.textContent = '▼';
+            filename.style.display = 'inline';
+        } else {
+            arrow.textContent = '▶';
+            filename.style.display = 'inline';
+        }
+    }
+
+    function toggleOtherLinks(event, button) {
+        event.stopPropagation();
+        const otherLinks = button.closest('.file-group-header').nextElementSibling.querySelector('.other-links');
+        otherLinks.classList.toggle('show');
+    }
+
     function shortenUrl() {
         const url = document.getElementById('urlInput').value;
         
@@ -487,7 +624,7 @@
         })
         .then(data => {
             if (data.success) {
-                const shortUrl = `${window.location.origin}/${data.short_url}`;
+                const shortUrl = `${window.location.origin}/${data.vanity}`;
                 document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
             } else {
                 document.getElementById('urlResult').innerHTML = `Error: ${data.error}`;
