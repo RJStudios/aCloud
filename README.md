@@ -1,6 +1,6 @@
 ## Text sharing, File sharing, link shortener.
 ### frontend and backend, easily configurable (thru editing the html files and the .py)
---------------dasdasdasdasdasdadasd--
+----------------
 TODO
 <iframe src="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/"> </iframe>
 1. Introduction
