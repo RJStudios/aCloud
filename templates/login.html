@@ -11,11 +11,16 @@
             margin: 0;
             padding: 0;
             display: flex;
-            justify-content: center;
-            align-items: center;
+            flex-direction: column;
             min-height: 100vh;
             background-color: #1a1a1a;
             color: #f0f0f0;
+        }
+        .content {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         .container {
             background-color: #2a2a2a;
@@ -75,27 +80,54 @@
         a:hover {
             text-decoration: underline;
         }
+        .back-button {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .back-button:hover {
+            color: #45a049;
+        }
+        .footer {
+            text-align: center;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+        }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h2>Login</h2>
-        <form method="POST">
-            <div>
-                <label for="username">Username:</label>
-                <input type="text" id="username" name="username" required>
-            </div>
-            <div>
-                <label for="password">Password:</label>
-                <input type="password" id="password" name="password" required>
-            </div>
-            <div class="remember-me">
-                <input type="checkbox" id="remember" name="remember">
-                <label for="remember">Remember me</label>
-            </div>
-            <button type="submit">Login</button>
-        </form>
-        <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+    <a href="/" class="back-button">&#8592;</a>
+    <div class="content">
+        <div class="container">
+            <h2>Login</h2>
+            <form method="POST">
+                <div>
+                    <label for="username">Username:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                <div>
+                    <label for="password">Password:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                <div class="remember-me">
+                    <input type="checkbox" id="remember" name="remember">
+                    <label for="remember">Remember me</label>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+        </div>
     </div>
+    <footer class="footer">
+        <p>
+            Source code: <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a> | 
+            <a href="https://office.bence.lol/form/#/2/form/view/z5Cf3CL6tZtPjzKsbcEPync6JE3iyMl22h6thUQg1a4/" target="_blank">Suggestions & Bugs</a> | 
+            <a href="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/" target="_blank">Todo List</a>
+        </p>
+    </footer>
 </body>
 </html>

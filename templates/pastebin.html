@@ -185,10 +185,25 @@
             color: white;
         }
 
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: var(--text-color);
+            text-decoration: none;
+            z-index: 1001;
+        }
+
+        .home-button:hover {
+            color: #4CAF50;
+        }
+
         {{ css|safe }}
     </style>
 </head>
 <body>
+    <a href="/" class="home-button">&#8962;</a>
     <div class="container">
         <h2>Content</h2>
         <p>Uploaded by: {{ content.username }}</p>
@@ -228,6 +243,14 @@
             </div>
         </div>
     </div>
+
+    <footer style="text-align: center; margin-top: 20px; padding: 10px; background-color: #2a2a2a; color: #f0f0f0;">
+        <p>
+            Source code: <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a> | 
+            <a href="https://office.bence.lol/form/#/2/form/view/z5Cf3CL6tZtPjzKsbcEPync6JE3iyMl22h6thUQg1a4/" target="_blank">Suggestions & Bugs</a> | 
+            <a href="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/" target="_blank">Todo List</a>
+        </p>
+    </footer>
 
     <script>
         const rawContent = {{ raw_content|tojson }};

@@ -258,6 +258,40 @@
         .other-links.show {
             display: block;
         }
+
+        .global-drop-area {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .global-drop-box {
+            border: 3px dashed #4CAF50;
+            border-radius: 20px;
+            padding: 50px;
+            text-align: center;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+        }
+
+        .instant-upload-result {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            z-index: 10000;
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -329,15 +363,37 @@
             <span class="close" onclick="closeModal('urlModal')">&times;</span>
             <h2>Shorten URL</h2>
             <input type="text" id="urlInput" placeholder="Enter URL here...">
+            <div>
+                <input type="checkbox" id="urlIsPrivate" name="urlIsPrivate">
+                <label for="urlIsPrivate">Add password protection</label>
+            </div>
+            <div id="urlPasswordField" style="display: none;">
+                <input type="password" id="urlPassword" placeholder="Enter password">
+            </div>
             <button onclick="shortenUrl()">Shorten URL</button>
             <div id="urlResult"></div>
         </div>
     </div>
 
+    <div class="global-drop-area">
+        <div class="global-drop-box">
+            <h2>Drop file to instantly upload</h2>
+        </div>
+    </div>
+
+    <div class="instant-upload-result">
+        <h3>File Uploaded</h3>
+        <p>Direct download URL: <a id="directDownloadUrl" href="#" target="_blank"></a></p>
+        <p>Normal URL: <a id="normalUrl" href="#" target="_blank"></a></p>
+        <button onclick="closeInstantUploadResult()">Close</button>
+    </div>
+
     <footer class="footer">
         <p>Source code available on: 
-            <a href="https://github.com/realcgcristi/order" target="_blank">GitHub (not up-to-date)</a> | 
-            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git (main)</a>
+            
+            <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git (main)</a> |
+            <a href="https://office.bence.lol/form/#/2/form/view/z5Cf3CL6tZtPjzKsbcEPync6JE3iyMl22h6thUQg1a4/" target="_blank">Suggestions & Bugs</a> | 
+            <a href="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/" target="_blank">Todo List</a>
         </p>
     </footer>
 
@@ -431,6 +487,10 @@
 
     document.getElementById('fileIsPrivate').addEventListener('change', function() {
         document.getElementById('filePasswordField').style.display = this.checked ? 'block' : 'none';
+    });
+
+    document.getElementById('urlIsPrivate').addEventListener('change', function() {
+        document.getElementById('urlPasswordField').style.display = this.checked ? 'block' : 'none';
     });
 
     function uploadText() {
@@ -608,13 +668,20 @@
 
     function shortenUrl() {
         const url = document.getElementById('urlInput').value;
+        const isPrivate = document.getElementById('urlIsPrivate').checked;
+        const password = isPrivate ? document.getElementById('urlPassword').value : null;
         
+        const data = {
+            url: url,
+            password: password
+        };
+
         fetch('/shorten', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ url: url }),
+            body: JSON.stringify(data),
         })
         .then(response => {
             if (!response.ok) {
@@ -625,7 +692,11 @@
         .then(data => {
             if (data.success) {
                 const shortUrl = `${window.location.origin}/${data.vanity}`;
-                document.getElementById('urlResult').innerHTML = `URL shortened. Access it <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+                let resultHtml = `URL shortened. Access it <a href="${shortUrl}" target="_blank">${shortUrl}</a>`;
+                if (isPrivate) {
+                    resultHtml += `<br>Password-protected link: <a href="${shortUrl}/${password}" target="_blank">${shortUrl}/${password}</a>`;
+                }
+                document.getElementById('urlResult').innerHTML = resultHtml;
             } else {
                 document.getElementById('urlResult').innerHTML = `Error: ${data.error}`;
             }
@@ -635,6 +706,70 @@
             document.getElementById('urlResult').innerHTML = `An error occurred: ${error.message}`;
         });
     }
+
+    // Global drag and drop
+    document.addEventListener('dragover', function(e) {
+        e.preventDefault();
+        document.querySelector('.global-drop-area').style.display = 'flex';
+    });
+
+    document.addEventListener('dragleave', function(e) {
+        if (e.clientX === 0 || e.clientY === 0) {
+            document.querySelector('.global-drop-area').style.display = 'none';
+        }
+    });
+
+    document.addEventListener('drop', function(e) {
+        e.preventDefault();
+        document.querySelector('.global-drop-area').style.display = 'none';
+        if (e.dataTransfer.files.length > 0) {
+            instantUploadFile(e.dataTransfer.files[0]);
+        }
+    });
+
+    function instantUploadFile(file) {
+        const formData = new FormData();
+        formData.append('file', file);
+
+        fetch('/upload/file', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('directDownloadUrl').href = data.download_url;
+                document.getElementById('directDownloadUrl').textContent = data.download_url;
+                document.getElementById('normalUrl').href = data.url;
+                document.getElementById('normalUrl').textContent = data.url;
+                document.querySelector('.instant-upload-result').style.display = 'block';
+            } else {
+                alert('Error uploading file: ' + data.error);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('An error occurred while uploading the file');
+        });
+    }
+
+    function closeInstantUploadResult() {
+        document.querySelector('.instant-upload-result').style.display = 'none';
+    }
+
+    // Paste functionality for file upload
+    document.addEventListener('paste', function(e) {
+        if (document.getElementById('fileModal').style.display === 'block') {
+            const items = e.clipboardData.items;
+            for (let i = 0; i < items.length; i++) {
+                if (items[i].kind === 'file') {
+                    const file = items[i].getAsFile();
+                    filesToUpload.push(file);
+                    updateSelectedFilesList();
+                }
+            }
+        }
+    });
     </script>
 </body>
 </html>

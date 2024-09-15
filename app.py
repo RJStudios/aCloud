@@ -668,17 +668,23 @@ def shorten_url():
             return jsonify({'success': False, 'error': 'URL is required'}), 400
 
         long_url = data['url']
+        password = data.get('password')  # Get the password if provided
         vanity = shortuuid.uuid()[:8]
         
         user_id = current_user.id if current_user.is_authenticated else None
         
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id) VALUES (?, ?, ?, ?, ?)",
-                       (vanity, 'url', long_url, datetime.now(), user_id))
+
+        is_private = 1 if password else 0
+
+        cursor.execute("""
+            INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) 
+            VALUES (?, ?, ?, ?, ?, ?, ?)
+        """, (vanity, 'url', long_url, datetime.now(), user_id, is_private, password))
+        
         db.commit()
         
-        # Return only the vanity code, not the full URL
         return jsonify({'success': True, 'vanity': vanity}), 200
     except Exception as e:
         print("Exception occurred:", str(e))
