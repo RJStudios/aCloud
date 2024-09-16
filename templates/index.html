@@ -296,6 +296,26 @@
             z-index: 10000;
             display: none;
         }
+
+        .instant-upload-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 9999;
+            display: none;
+        }
+
+        .instant-upload-result .close-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+        }
     </style>
 </head>
 <body>
@@ -385,11 +405,12 @@
         </div>
     </div>
 
+    <div class="instant-upload-overlay"></div>
     <div class="instant-upload-result">
+        <span class="close-btn" onclick="closeInstantUploadResult()">&times;</span>
         <h3>File Uploaded</h3>
         <p>Direct download URL: <a id="directDownloadUrl" href="#" target="_blank"></a></p>
         <p>Normal URL: <a id="normalUrl" href="#" target="_blank"></a></p>
-        <button onclick="closeInstantUploadResult()">Close</button>
     </div>
 
     <footer class="footer">
@@ -434,6 +455,8 @@
         });
     });
 
+    let isFileModalOpen = false;
+
     function openModal(modalId) {
         const modal = document.getElementById(modalId);
         const button = document.querySelector(`button[onclick="openModal('${modalId}')"]`);
@@ -458,6 +481,10 @@
                 clearInterval(fadeIn);
             }
         }, 30);
+
+        if (modalId === 'fileModal') {
+            isFileModalOpen = true;
+        }
     }
 
     function closeModal(modalId) {
@@ -477,11 +504,18 @@
                 modal.style.display = "none";
             }
         }, 30);
+
+        if (modalId === 'fileModal') {
+            isFileModalOpen = false;
+        }
     }
 
     window.onclick = function(event) {
         if (event.target.className === "modal") {
             event.target.style.display = "none";
+            if (event.target.id === 'fileModal') {
+                isFileModalOpen = false;
+            }
         }
     }
 
@@ -714,7 +748,9 @@
     // Global drag and drop
     document.addEventListener('dragover', function(e) {
         e.preventDefault();
-        document.querySelector('.global-drop-area').style.display = 'flex';
+        if (!isFileModalOpen) {
+            document.querySelector('.global-drop-area').style.display = 'flex';
+        }
     });
 
     document.addEventListener('dragleave', function(e) {
@@ -726,7 +762,7 @@
     document.addEventListener('drop', function(e) {
         e.preventDefault();
         document.querySelector('.global-drop-area').style.display = 'none';
-        if (e.dataTransfer.files.length > 0) {
+        if (!isFileModalOpen && e.dataTransfer.files.length > 0) {
             instantUploadFile(e.dataTransfer.files[0]);
         }
     });
@@ -746,6 +782,7 @@
                 document.getElementById('directDownloadUrl').textContent = data.download_url;
                 document.getElementById('normalUrl').href = data.url;
                 document.getElementById('normalUrl').textContent = data.url;
+                document.querySelector('.instant-upload-overlay').style.display = 'block';
                 document.querySelector('.instant-upload-result').style.display = 'block';
             } else {
                 alert('Error uploading file: ' + data.error);
@@ -758,6 +795,7 @@
     }
 
     function closeInstantUploadResult() {
+        document.querySelector('.instant-upload-overlay').style.display = 'none';
         document.querySelector('.instant-upload-result').style.display = 'none';
     }
 
