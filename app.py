@@ -276,6 +276,7 @@ def redirect_vanity(vanity, password=None):
                 entered_password = request.form.get('password')
                 if entered_password != stored_password:
                     return render_template('password_prompt.html', vanity=vanity, error="Incorrect password", content_type=content_type)
+                password = entered_password  # Set the password for use in raw_url
             else:
                 return render_template('password_prompt.html', vanity=vanity, error=None, content_type=content_type)
         
@@ -308,7 +309,8 @@ def redirect_vanity(vanity, password=None):
                                            raw_url=raw_url,
                                            vanity=vanity,
                                            user_id=user_id,
-                                           is_private=is_private)
+                                           is_private=is_private,
+                                           password=password)
         elif content_type == 'pastebin':
             try:
                 lexer = guess_lexer(content_data)
