@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login - aCloud</title>
+    <title>Login - sxbin</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -97,37 +97,54 @@
             background-color: #2a2a2a;
             color: #f0f0f0;
         }
+        .error-message {
+            background-color: #ff6b6b;
+            color: white;
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+            display: none;
+        }
     </style>
 </head>
 <body>
     <a href="/" class="back-button">&#8592;</a>
     <div class="content">
         <div class="container">
-            <h2>Login</h2>
-            <form method="POST">
-                <div>
-                    <label for="username">Username:</label>
-                    <input type="text" id="username" name="username" required>
-                </div>
-                <div>
-                    <label for="password">Password:</label>
-                    <input type="password" id="password" name="password" required>
-                </div>
-                <div class="remember-me">
-                    <input type="checkbox" id="remember" name="remember">
-                    <label for="remember">Remember me</label>
-                </div>
-                <button type="submit">Login</button>
+            <h2>Login to sxbin</h2>
+            <div id="error-message" class="error-message"></div>
+            <form id="login-form" method="POST">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required>
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required>
+                <label>
+                    <input type="checkbox" name="remember"> Remember me
+                </label>
+                <input type="submit" value="Login">
             </form>
-            <p>Don't have an account? <a href="{{ url_for('register') }}">Register here</a></p>
+            <p>Don't have an account? <a href="{{ url_for('register') }}">Register</a></p>
         </div>
     </div>
-    <footer class="footer">
-        <p>
-            Source code: <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a> | 
-            <a href="https://office.bence.lol/form/#/2/form/view/z5Cf3CL6tZtPjzKsbcEPync6JE3iyMl22h6thUQg1a4/" target="_blank">Suggestions & Bugs</a> | 
-            <a href="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/" target="_blank">Todo List</a>
-        </p>
-    </footer>
+
+    <script>
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            fetch('/login', {
+                method: 'POST',
+                body: new FormData(this),
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    window.location.href = data.redirect;
+                } else {
+                    document.getElementById('error-message').textContent = data.error;
+                    document.getElementById('error-message').style.display = 'block';
+                }
+            });
+        });
+    </script>
 </body>
 </html>

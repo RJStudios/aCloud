@@ -264,20 +264,27 @@ def redirect_vanity(vanity, password=None):
                 return render_template('password_prompt.html', vanity=vanity, error=None)
         
         if content_type == 'url':
-            return redirect(content_data)
+            return render_template('og_shorturl.html', long_url=content_data, username=username, created_at=created_at)
         elif content_type == 'file':
-            file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], content_data)
-            app.logger.info(f"Attempting to serve file: {file_path}")
+            file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
-                if 'download' in request.path:
-                    return send_file(file_path, as_attachment=True)
-                else:
-                    return send_file(file_path)
-            else:
-                app.logger.error(f"File not found: {file_path}")
-                return "File not found", 404
+                file_size = os.path.getsize(file_path)
+                file_extension = os.path.splitext(content_data)[1].lower()
+                is_image = file_extension in ['.jpg', '.jpeg', '.png', '.gif']
+                return render_template('og_file.html', 
+                                       filename=content_data, 
+                                       file_size=file_size, 
+                                       username=username, 
+                                       created_at=created_at,
+                                       is_image=is_image,
+                                       file_url=url_for('redirect_vanity', vanity=vanity, _external=True))
         elif content_type == 'pastebin':
-            return render_pastebin(content_data, created_at, user_id, username, vanity, is_private)
+            first_lines = '\n'.join(content_data.split('\n')[:5])  # Get first 5 lines
+            return render_template('og_pastebin.html', 
+                                   vanity=vanity, 
+                                   first_lines=first_lines, 
+                                   username=username, 
+                                   created_at=created_at)
     
     app.logger.error(f"Content not found for vanity: {vanity}")
     return "Not found", 404
@@ -330,17 +337,6 @@ def raw_vanity(vanity, password=None):
         
         return content_data, 200, {'Content-Type': 'text/plain; charset=utf-8'}
     return 'Not Found', 404
-# Replace the LoginForm and RegistrationForm classes with simple classes
-class LoginForm:
-    def __init__(self, username, password, remember):
-        self.username = username
-        self.password = password
-        self.remember = remember
-
-class RegistrationForm:
-    def __init__(self, username, password):
-        self.username = username
-        self.password = password
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
@@ -348,16 +344,15 @@ def login():
         username = request.form['username']
         password = request.form['password']
         remember = 'remember' in request.form
-        form = LoginForm(username, password, remember)
         db = get_db()
         cursor = db.cursor()
-        cursor.execute("SELECT * FROM users WHERE username = ?", (form.username,))
+        cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         user = cursor.fetchone()
-        if user and User.verify_password(user[2], form.password):
+        if user and User.verify_password(user[2], password):
             user_obj = User(user[0], user[1], user[2], user[3])
-            login_user(user_obj, remember=form.remember)
-            return redirect(url_for('user_files', username=form.username))
-        return "Invalid username or password"
+            login_user(user_obj, remember=remember)
+            return jsonify({'success': True, 'redirect': url_for('user_files', username=username)})
+        return jsonify({'success': False, 'error': 'Invalid username or password'})
     return render_template('login.html')
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -365,23 +360,26 @@ def register():
     if request.method == 'POST':
         username = request.form['username']
         password = request.form['password']
-        api_key = User.generate_api_key()  # Generate API key
+        
+        if len(password) < 5 or not any(c.isupper() for c in password):
+            return jsonify({'success': False, 'error': 'Password does not meet requirements'})
+        
+        api_key = User.generate_api_key()
         db = get_db()
         cursor = db.cursor()
         cursor.execute("SELECT * FROM users WHERE username = ?", (username,))
         if cursor.fetchone():
-            return "Username already exists"
+            return jsonify({'success': False, 'error': 'Username already exists'})
         hashed_password = User.hash_password(password)
         cursor.execute("INSERT INTO users (username, password_hash, api_key) VALUES (?, ?, ?)",
                        (username, hashed_password, api_key))
         db.commit()
         
-        # Create user directory
         user_folder = os.path.join(app.config['UPLOAD_FOLDER'], username)
         if not os.path.exists(user_folder):
             os.makedirs(user_folder)
         
-        return redirect(url_for('login'))
+        return jsonify({'success': True, 'redirect': url_for('login')})
     return render_template('register.html')
 
 @app.route('/logout')
@@ -819,7 +817,7 @@ def generate_sharex_config():
     base_url = request.url_root.replace('http://', 'https://', 1).rstrip('/')
     config = {
         "Version": "13.7.0",
-        "Name": "aCloud",
+        "Name": "sxbin",
         "DestinationType": "ImageUploader, TextUploader, FileUploader, URLShortener",
         "RequestMethod": "POST",
         "RequestURL": f"{base_url}/api/upload",
@@ -836,7 +834,7 @@ def generate_sharex_config():
     
     response = make_response(json.dumps(config, indent=2))
     response.headers.set('Content-Type', 'application/json')
-    response.headers.set('Content-Disposition', 'attachment', filename='aCloud_ShareX.sxcu')
+    response.headers.set('Content-Disposition', 'attachment', filename='sxbin_ShareX.sxcu')
     return response
 
 @app.route('/api/upload', methods=['POST'])

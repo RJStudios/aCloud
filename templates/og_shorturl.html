@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortened URL - sxbin</title>
+    <meta property="og:title" content="Shortened URL">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:description" content="Shortened link created by {{ username }} on {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+    <meta property="og:site_name" content="sxbin">
+    <meta property="theme-color" content="#4CAF50">
+    <meta http-equiv="refresh" content="0;url={{ long_url }}">
+</head>
+<body>
+    <h1>Shortened URL</h1>
+    <p>Redirecting to: {{ long_url }}</p>
+    <p>Created by: {{ username }}</p>
+    <p>Date: {{ created_at.strftime('%Y-%m-
+
+%d %H:%M:%S') }}</p>
+</body>
+</html>

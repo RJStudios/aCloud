@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pastebin {{ vanity }} - sxbin</title>
+    <meta property="og:title" content="Pastebin {{ vanity }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:description" content="{{ first_lines|truncate(200) }}">
+    <meta property="og:site_name" content="sxbin">
+    <meta property="theme-color" content="#4CAF50">
+</head>
+<body>
+    <h1>Pastebin {{ vanity }}</h1>
+    <pre>{{ first_lines }}</pre>
+    <p>Created by: {{ username }}</p>
+    <p>Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}</p>
+</body>
+</html>
