@@ -881,7 +881,7 @@
         <div class="tabs">
             <button class="tab active" onclick="openTab(event, 'filesAndFolders')">Files and Folders</button>
             <button class="tab" onclick="openTab(event, 'myUploads')">My Uploads</button>
-            <button class="tab" onclick="openTab(event, 'shareXConfig')">ShareX Config</button>
+            <button class="tab" onclick="openTab(event, 'apiKeyShareX')">API Key & ShareX</button>
         </div>
 
         <div id="filesAndFolders" class="tab-content active">
@@ -985,10 +985,33 @@
             </div>
         </div>
 
-        <div id="shareXConfig" class="tab-content">
-            <h3>ShareX Configuration</h3>
-            <p>Click the button below to download your ShareX configuration file:</p>
-            <a href="{{ url_for('generate_sharex_config') }}" class="btn" download="aCloud_ShareX.sxcu">Download ShareX Config</a>
+        <div id="apiKeyShareX" class="tab-content">
+            <h3>API Key & ShareX</h3>
+            
+            <div class="sharex-config-section">
+                <h4>ShareX Configuration</h4>
+                <p>Download the ShareX configuration file to easily integrate with our service:</p>
+                <a href="{{ url_for('generate_sharex_config') }}" class="btn">Download ShareX Config</a>
+            </div>
+
+            <div class="api-key-section">
+                <h4>Your API Key</h4>
+                <p>API Key: <span id="apiKey" class="blurred">{{ current_user.api_key }}</span></p>
+                <button onclick="showResetApiKeyModal()" class="btn">Reset API Key</button>
+            </div>
+        </div>
+
+        <!-- Reset API Key Modal -->
+        <div id="resetApiKeyModal" class="modal">
+            <div class="modal-content">
+                <h2>Reset API Key</h2>
+                <p>Are you sure you want to reset your API key? This action cannot be undone.</p>
+                <p>Your old ShareX configuration will no longer work. You'll need to generate a new one after resetting.</p>
+                <div class="modal-buttons">
+                    <button onclick="resetApiKey()" class="btn btn-danger">Reset API Key</button>
+                    <button onclick="closeResetApiKeyModal()" class="btn">Cancel</button>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1589,6 +1612,22 @@
         .file-group-link a:hover {
             text-decoration: underline;
         }
+
+        .blurred {
+            filter: blur(5px);
+            transition: filter 0.3s ease;
+        }
+
+        .blurred:hover {
+            filter: blur(0);
+        }
+
+        .api-key-section, .sharex-config-section {
+            margin-bottom: 20px;
+            padding: 15px;
+            background-color: var(--highlight-bg);
+            border-radius: 5px;
+        }
     </style>
 
     <script>
@@ -2188,6 +2227,38 @@
                 });
             });
         });
+
+        function showResetApiKeyModal() {
+            document.getElementById('resetApiKeyModal').style.display = 'block';
+        }
+
+        function closeResetApiKeyModal() {
+            document.getElementById('resetApiKeyModal').style.display = 'none';
+        }
+
+        function resetApiKey() {
+            fetch('/reset_api_key', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    document.getElementById('apiKey').textContent = data.new_api_key;
+                    alert('API Key has been reset. Please update your applications and download a new ShareX configuration.');
+                } else {
+                    alert('Error resetting API Key: ' + data.error);
+                }
+                closeResetApiKeyModal();
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('An error occurred while resetting the API Key');
+                closeResetApiKeyModal();
+            });
+        }
     </script>
 </body>
 </html>

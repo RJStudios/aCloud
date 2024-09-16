@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>API Documentation - sxbin</title>
+    <style>
+        /* Add your styles here */
+    </style>
+</head>
+<body>
+    <h1>sxbin API Documentation</h1>
+    
+    <h2>Authentication</h2>
+    <p>All API requests require an API key to be sent in the X-API-Key header.</p>
+    
+    <h2>Endpoints</h2>
+    
+    <h3>Upload File</h3>
+    <pre>
+POST /api/upload/file
+Headers: 
+  X-API-Key: your_api_key
+Body: multipart/form-data
+  file: (binary)
+    </pre>
+    <p>Returns: JSON with file URL and deletion URL</p>
+    
+    <h3>Upload Pastebin</h3>
+    <pre>
+POST /api/upload/pastebin
+Headers:
+  X-API-Key: your_api_key
+  Content-Type: application/json
+Body:
+{
+  "content": "Your pastebin content here"
+}
+    </pre>
+    <p>Returns: JSON with pastebin URL and deletion URL</p>
+    
+    <h3>Shorten URL</h3>
+    <pre>
+POST /api/shorten
+Headers:
+  X-API-Key: your_api_key
+  Content-Type: application/json
+Body:
+{
+  "url": "https://example.com/your-long-url-here"
+}
+    </pre>
+    <p>Returns: JSON with shortened URL and deletion URL</p>
+    
+    <h2>Error Handling</h2>
+    <p>All errors are returned as JSON with an "error" field describing the issue.</p>
+    
+    <footer>
+        <p>For more information or support, please contact our team.</p>
+    </footer>
+</body>
+</html>

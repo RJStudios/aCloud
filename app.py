@@ -1222,6 +1222,20 @@ def is_valid_password(password):
     banned_passwords = ['info', 'download']
     return password not in banned_passwords
 
+@app.route('/reset_api_key', methods=['POST'])
+@login_required
+def reset_api_key():
+    new_api_key = secrets.token_urlsafe(32)
+    db = get_db()
+    cursor = db.cursor()
+    cursor.execute("UPDATE users SET api_key = ? WHERE id = ?", (new_api_key, current_user.id))
+    db.commit()
+    return jsonify({'success': True, 'new_api_key': new_api_key})
+
+@app.route('/api/docs')
+def api_docs():
+    return render_template('api_docs.html')
+
 if __name__ == '__main__':
     # Start the cleanup thread
     cleanup_thread = threading.Thread(target=delete_old_files)
