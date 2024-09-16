@@ -43,7 +43,7 @@
             padding: 20px;
         }
 
-        h1 {
+        h1, h2 {
             margin-bottom: 20px;
         }
 
@@ -72,6 +72,31 @@
             border-radius: 4px;
             padding: 1em;
             overflow: auto;
+            position: relative;
+        }
+
+        .highlight pre {
+            color: var(--text-color);
+            white-space: pre;
+            word-wrap: normal;
+            overflow-x: auto;
+            margin: 0;
+            padding: 0;
+        }
+
+        .highlight .linenos {
+            color: #999;
+            text-align: right;
+            padding-right: 10px;
+            border-right: 1px solid var(--highlight-border);
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+        }
+
+        .highlight .code {
+            padding-left: 10px;
         }
 
         #theme-toggle {
@@ -87,12 +112,6 @@
 
         a:hover {
             text-decoration: underline;
-        }
-
-        .highlight pre {
-            color: var(--text-color);
-            white-space: pre-wrap;
-            word-wrap: break-word;
         }
 
         .btn-container {
