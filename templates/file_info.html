@@ -9,7 +9,7 @@
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
     {% if is_embeddable %}
-    <meta property="og:image" content="{{ file_url }}">
+    <meta property="og:image" content="{{ file_url }}/raw">
     {% endif %}
     <meta property="og:site_name" content="sxbin">
     <meta property="theme-color" content="#4CAF50">
@@ -110,20 +110,21 @@
         <div class="info-item"><strong>File size:</strong> {{ file_size|filesizeformat }}</div>
         <div class="info-item"><strong>Uploaded by:</strong> {{ username }}</div>
         <div class="info-item"><strong>Date:</strong> {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        <div class="info-item"><strong>File type:</strong> {{ filename.split('.')[-1].upper() if '.' in filename else 'Unknown' }}</div>
         
         {% if is_embeddable %}
         <div class="embed-container">
             {% if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg')) %}
-            <img src="{{ file_url }}" alt="{{ filename }}">
+            <img src="{{ file_url }}/raw" alt="{{ filename }}">
             {% elif filename.lower().endswith('.pdf') %}
-            <embed src="{{ file_url }}" type="application/pdf" width="100%" height="600px">
+            <embed src="{{ file_url }}/raw" type="application/pdf" width="100%" height="600px">
             {% endif %}
         </div>
         {% endif %}
         
         <div class="btn-container">
-            <a href="{{ url_for('redirect_vanity', vanity=vanity, _external=True) }}/download" class="btn">Download</a>
-            <a href="{{ url_for('redirect_vanity', vanity=vanity, _external=True) }}/raw" class="btn">View Raw</a>
+            <a href="{{ file_url }}/download" class="btn">Download</a>
+            <a href="{{ file_url }}/raw" class="btn">View Raw</a>
             {% if current_user.is_authenticated and current_user.id == user_id %}
                 {% if filename.lower().endswith(('.txt', '.html', '.css', '.js', '.py', '.md')) or '.' not in filename %}
                 <a href="{{ url_for('edit_content', vanity=vanity) }}" class="btn edit-btn">Edit</a>

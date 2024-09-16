@@ -242,9 +242,6 @@ def redirect_vanity(vanity, password=None):
     app.logger.info(f"Request URL: {request.url}")
     app.logger.info(f"Request endpoint: {request.endpoint}")
     app.logger.info(f"Request view args: {request.view_args}")
-    app.logger.info(f"All routes:")
-    for rule in app.url_map.iter_rules():
-        app.logger.info(f"  - {rule}")
     
     db = get_db()
     cursor = db.cursor()
@@ -252,15 +249,8 @@ def redirect_vanity(vanity, password=None):
     is_download = 'download' in request.path
     is_raw = 'raw' in request.path
     
-    # First, try to find the content with the full vanity (including extension)
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
-    
-    # If not found, try without the extension
-    if not content:
-        vanity_without_extension = os.path.splitext(vanity)[0]
-        cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity LIKE ?", (f"{vanity_without_extension}%",))
-        content = cursor.fetchone()
     
     if content:
         content_type, content_data, created_at, user_id, is_private, stored_password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
@@ -292,9 +282,9 @@ def redirect_vanity(vanity, password=None):
                 is_embeddable = file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.pdf']
                 file_url = url_for('redirect_vanity', vanity=vanity, _external=True)
                 
-                if is_download or (not is_embeddable and not is_raw):
+                if is_download:
                     return send_file(file_path, as_attachment=True)
-                elif is_raw and is_embeddable:
+                elif is_raw:
                     return send_file(file_path)
                 else:
                     return render_template('file_info.html', 
@@ -1129,10 +1119,11 @@ def upload_file():
             app.logger.info(f"1. Calling url_for with: 'redirect_vanity', vanity={vanity_with_extension}")
             app.logger.info(f"   Full parameters: endpoint='redirect_vanity', vanity={vanity_with_extension}, _external=True, _scheme={scheme}")
             
-            # Modify this line to remove the /raw suffix
-            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme).rstrip('/raw')
+            # Capture the result of url_for and remove the /raw suffix
+            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme)
+            short_url = short_url.rstrip('/raw')
             
-            app.logger.info(f"2. Result of url_for: {short_url}")
+            app.logger.info(f"2. Result of url_for (after removing /raw): {short_url}")
             app.logger.info(f"3. Inspecting short_url:")
             app.logger.info(f"   - Base: {short_url.split('?')[0]}")
             app.logger.info(f"   - Query parameters: {short_url.split('?')[1] if '?' in short_url else 'None'}")

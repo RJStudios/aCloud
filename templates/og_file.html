@@ -9,14 +9,14 @@
     <meta property="og:url" content="{{ request.url }}">
     <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
     {% if is_embeddable %}
-    <meta property="og:image" content="{{ file_url }}">
+    <meta property="og:image" content="{{ file_url }}/raw">
     {% endif %}
     <meta property="og:site_name" content="sxbin">
     <meta property="theme-color" content="#4CAF50">
 </head>
 <body>
     <script>
-        window.location.href = "{{ file_url }}/download";
+        window.location.href = "{{ file_url }}";
     </script>
 </body>
 </html>
