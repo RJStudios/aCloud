@@ -236,7 +236,16 @@ def serve_user_page(username, filename=None):
 @app.route('/<vanity>/raw', methods=['GET', 'POST'])
 @app.route('/<vanity>/raw/<password>', methods=['GET', 'POST'])
 def redirect_vanity(vanity, password=None):
-    app.logger.info(f"Accessing vanity: {vanity}, password: {password}")
+    app.logger.info(f"Accessing redirect_vanity: vanity={vanity}, password={password}")
+    app.logger.info(f"Request path: {request.path}")
+    app.logger.info(f"Request method: {request.method}")
+    app.logger.info(f"Request URL: {request.url}")
+    app.logger.info(f"Request endpoint: {request.endpoint}")
+    app.logger.info(f"Request view args: {request.view_args}")
+    app.logger.info(f"All routes:")
+    for rule in app.url_map.iter_rules():
+        app.logger.info(f"  - {rule}")
+    
     db = get_db()
     cursor = db.cursor()
     
@@ -1073,13 +1082,17 @@ def rename_user_file(username):
 
 @app.route('/upload/file', methods=['POST'])
 def upload_file():
+    app.logger.info("Starting file upload process")
     if 'file' not in request.files:
+        app.logger.error("No file part in the request")
         return jsonify({'success': False, 'error': 'No file part'}), 400
     file = request.files['file']
     if file.filename == '':
+        app.logger.error("No selected file")
         return jsonify({'success': False, 'error': 'No selected file'}), 400
     if file:
         try:
+            app.logger.info(f"Processing file: {file.filename}")
             filename = secure_filename(file.filename)
             extension = os.path.splitext(filename)[1].lower()
             vanity = shortuuid.uuid()[:8]
@@ -1087,23 +1100,55 @@ def upload_file():
             new_filename = vanity_with_extension
             file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
             
+            app.logger.info(f"Saving file to: {file_path}")
             file.save(file_path)
             
             user_id = current_user.id if current_user.is_authenticated else None
+            app.logger.info(f"User ID: {user_id}")
             
             password = request.form.get('password')
             is_private = 1 if password else 0
+            app.logger.info(f"Is private: {is_private}")
             
             db = get_db()
             cursor = db.cursor()
+            app.logger.info("Inserting file info into database")
             cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
                            (vanity_with_extension, 'file', new_filename, datetime.now(), user_id, is_private, password))
             db.commit()
             
-            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True)
-            short_url = short_url.replace('/download', '')
+            # Determine the scheme based on the original request
+            scheme = 'https' if request.is_secure else 'http'
+            app.logger.info(f"Using scheme: {scheme}")
+            
+            app.logger.info("Generating URLs")
+            app.logger.info(f"vanity_with_extension: {vanity_with_extension}")
+            
+            # Log the URL generation process step by step
+            app.logger.info("Generating short URL:")
+            app.logger.info(f"1. Calling url_for with: 'redirect_vanity', vanity={vanity_with_extension}")
+            app.logger.info(f"   Full parameters: endpoint='redirect_vanity', vanity={vanity_with_extension}, _external=True, _scheme={scheme}")
+            
+            # Modify this line to remove the /raw suffix
+            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme).rstrip('/raw')
+            
+            app.logger.info(f"2. Result of url_for: {short_url}")
+            app.logger.info(f"3. Inspecting short_url:")
+            app.logger.info(f"   - Base: {short_url.split('?')[0]}")
+            app.logger.info(f"   - Query parameters: {short_url.split('?')[1] if '?' in short_url else 'None'}")
+            
+            app.logger.info("Generating download URL:")
             download_url = short_url + '/download'
-            deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True)
+            app.logger.info(f"4. Download URL: {download_url}")
+            
+            app.logger.info("Generating deletion URL:")
+            app.logger.info(f"5. Calling url_for with: 'delete_content', vanity={vanity_with_extension}")
+            app.logger.info(f"   Full parameters: endpoint='delete_content', vanity={vanity_with_extension}, _external=True, _scheme={scheme}")
+            
+            # Capture the result of url_for for deletion
+            deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True, _scheme=scheme)
+            
+            app.logger.info(f"6. Result of deletion url_for: {deletion_url}")
             
             # Add debug logging
             app.logger.info(f"File uploaded: {new_filename}")
@@ -1113,12 +1158,14 @@ def upload_file():
             
             # Check if the request is from ShareX
             if 'X-API-Key' in request.headers:
+                app.logger.info("Request from ShareX detected")
                 return json.dumps({
                     'status': 'success',
                     'url': short_url,
                     'deletion_url': deletion_url,
                 })
             else:
+                app.logger.info("Returning JSON response")
                 return jsonify({
                     'success': True,
                     'vanity': vanity_with_extension,
@@ -1131,6 +1178,7 @@ def upload_file():
             app.logger.error(f"Error uploading file: {str(e)}")
             return jsonify({'success': False, 'error': str(e)}), 500
 
+    app.logger.error("Unknown error occurred")
     return jsonify({'success': False, 'error': 'Unknown error occurred'}), 500
 
 # Add this function to validate passwords
