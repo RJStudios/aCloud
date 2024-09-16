@@ -7,9 +7,9 @@
     <meta property="og:title" content="{{ filename }}">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+    <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}{% if is_private %} | Password Protected{% endif %}">
     {% if is_embeddable %}
-    <meta property="og:image" content="{{ file_url }}">
+    <meta property="og:image" content="{{ raw_url }}">
     {% endif %}
     <meta property="og:site_name" content="sxbin">
     <meta property="theme-color" content="#4CAF50">
@@ -115,21 +115,21 @@
         {% if is_embeddable %}
         <div class="embed-container">
             {% if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg')) %}
-            <img src="{{ file_url }}" alt="{{ filename }}">
+            <img src="{{ raw_url|replace('/r/', '/') }}" alt="{{ filename }}">
             {% elif filename.lower().endswith('.pdf') %}
-            <embed src="{{ file_url }}" type="application/pdf" width="100%" height="600px">
+            <embed src="{{ raw_url|replace('/r/', '/') }}" type="application/pdf" width="100%" height="600px">
             {% endif %}
         </div>
         {% endif %}
         
         <div class="btn-container">
-            <a href="{{ file_url }}/download" class="btn">Download</a>
-            <a href="{{ file_url }}" class="btn">View Raw</a>
+            <a href="{{ file_url|replace('/r/', '/') }}/download" class="btn">Download</a>
+            <a href="{{ raw_url|replace('/r/', '/') }}" class="btn">View Raw</a>
             {% if current_user.is_authenticated and current_user.id == user_id %}
                 {% if filename.lower().endswith(('.txt', '.html', '.css', '.js', '.py', '.md')) or '.' not in filename %}
-                <a href="{{ url_for('edit_content', vanity=vanity) }}" class="btn edit-btn">Edit</a>
+                <a href="{{ url_for('edit_content', vanity=vanity)|replace('/r/', '/') }}" class="btn edit-btn">Edit</a>
                 {% endif %}
-                <form action="{{ url_for('delete_content', vanity=vanity) }}" method="post" style="display: inline;">
+                <form action="{{ url_for('delete_content', vanity=vanity)|replace('/r/', '/') }}" method="post" style="display: inline;">
                     <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
                 </form>
             {% endif %}

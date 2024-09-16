@@ -233,6 +233,8 @@ def serve_user_page(username, filename=None):
 @app.route('/<vanity>/<password>', methods=['GET', 'POST'])
 @app.route('/<vanity>/download', methods=['GET', 'POST'])
 @app.route('/<vanity>/download/<password>', methods=['GET', 'POST'])
+@app.route('/<vanity>/raw', methods=['GET', 'POST'])
+@app.route('/<vanity>/raw/<password>', methods=['GET', 'POST'])
 def redirect_vanity(vanity, password=None):
     app.logger.info(f"Accessing redirect_vanity: vanity={vanity}, password={password}")
     app.logger.info(f"Request path: {request.path}")
@@ -245,6 +247,7 @@ def redirect_vanity(vanity, password=None):
     cursor = db.cursor()
     
     is_download = 'download' in request.path
+    is_raw = 'raw' in request.path
     
     # First, try to find the content with the full vanity (including extension)
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
@@ -272,22 +275,28 @@ def redirect_vanity(vanity, password=None):
             elif request.method == 'POST':
                 entered_password = request.form.get('password')
                 if entered_password != stored_password:
-                    return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
+                    return render_template('password_prompt.html', vanity=vanity, error="Incorrect password", content_type=content_type)
             else:
-                return render_template('password_prompt.html', vanity=vanity, error=None)
+                return render_template('password_prompt.html', vanity=vanity, error=None, content_type=content_type)
         
         if content_type == 'url':
-            return render_template('og_shorturl.html', long_url=content_data, username=username, created_at=created_at)
+            return render_template('og_shorturl.html', long_url=content_data, username=username, created_at=created_at, vanity=vanity, is_private=is_private)
         elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
                 file_size = os.path.getsize(file_path)
                 file_extension = os.path.splitext(content_data)[1].lower()
                 is_embeddable = file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.pdf']
-                file_url = url_for('redirect_vanity', vanity=vanity, _external=True)
+                file_url = f"{request.scheme}://{request.host}/{vanity}"
+                raw_url = f"{file_url}/raw"
+                
+                if is_private and password:
+                    raw_url += f'/{password}'
                 
                 if is_download:
                     return send_file(file_path, as_attachment=True)
+                elif is_raw:
+                    return send_file(file_path)
                 else:
                     return render_template('file_info.html', 
                                            filename=content_data, 
@@ -296,8 +305,10 @@ def redirect_vanity(vanity, password=None):
                                            created_at=created_at,
                                            is_embeddable=is_embeddable,
                                            file_url=file_url,
+                                           raw_url=raw_url,
                                            vanity=vanity,
-                                           user_id=user_id)
+                                           user_id=user_id,
+                                           is_private=is_private)
         elif content_type == 'pastebin':
             try:
                 lexer = guess_lexer(content_data)
@@ -458,7 +469,7 @@ def user_files(username, subpath=''):
     uploads = []
     for upload in user_uploads:
         vanity, content_type, data, created_at, _, is_private = upload[:6]
-        url = url_for('redirect_vanity', vanity=vanity, _external=True)
+        url = f"{request.scheme}://{request.host}/{vanity}"
         uploads.append({
             'type': content_type,
             'vanity': vanity,
@@ -466,7 +477,7 @@ def user_files(username, subpath=''):
             'created_at': created_at,
             'is_private': is_private,
             'url': url,
-            'download_url': url + '/download' if content_type == 'file' else None
+            'download_url': f"{url}/download" if content_type == 'file' else None
         })
     
     parent_folder = os.path.dirname(subpath.rstrip('/')) if subpath else None
@@ -680,7 +691,7 @@ def upload_pastebin():
         inserted_data = cursor.fetchone()
         print(f"Inserted data: {inserted_data}")
         
-        short_url = url_for('redirect_vanity', vanity=vanity, _external=True)
+        short_url = f"{request.scheme}://{request.host}/{vanity}"
         deletion_url = url_for('delete_content', vanity=vanity, _external=True)
         print(f"Generated short URL: {short_url}")
         print(f"Generated deletion URL: {deletion_url}")
@@ -1172,12 +1183,11 @@ def upload_file():
             
             app.logger.info("Generating URLs")
             app.logger.info("Code: short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme)")
-            short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme)
-            short_url = short_url.rstrip('/download')  # Remove the '/download' suffix if present
+            short_url = f"{scheme}://{request.host}/{vanity_with_extension}"
             app.logger.info(f"Generated short URL: {short_url}")
             
             app.logger.info("Code: download_url = short_url + '/download'")
-            download_url = short_url + '/download'
+            download_url = f"{short_url}/download"
             app.logger.info(f"Generated download URL: {download_url}")
             
             app.logger.info("Code: deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True, _scheme=scheme)")

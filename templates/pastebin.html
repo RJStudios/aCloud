@@ -7,7 +7,7 @@
     <meta property="og:title" content="Pastebin {{ vanity }} - sxbin">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:description" content="Uploaded by: {{ content.username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+    <meta property="og:description" content="Pastebin{% if is_private %} (Password Protected){% endif %} | Uploaded by: {{ content.username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
     <meta property="og:site_name" content="sxbin">
     <meta property="theme-color" content="#4CAF50">
     <style>
