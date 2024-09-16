@@ -1,9 +1,15 @@
 <!DOCTYPE html>
-<html lang="en" class="dark-mode">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Content</title>
+    <title>Pastebin {{ vanity }} - sxbin</title>
+    <meta property="og:title" content="Pastebin {{ vanity }} - sxbin">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:description" content="{{ content.data[:200] }}">
+    <meta property="og:site_name" content="sxbin">
+    <meta property="theme-color" content="#4CAF50">
     <style>
         :root {
             --bg-color: #1e1e1e;
@@ -123,68 +129,6 @@
             width: 100%;
         }
 
-        .modal {
-            display: none;
-            position: fixed;
-            z-index: 1000;
-            left: 0;
-            top: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0,0,0,0.5);
-        }
-
-        .modal-content {
-            background-color: var(--bg-color);
-            margin: 15% auto;
-            padding: 20px;
-            border: 1px solid var(--highlight-border);
-            width: 300px;
-            border-radius: 8px;
-        }
-
-        .modal-content h3 {
-            margin-top: 0;
-        }
-
-        .modal-content input[type="password"] {
-            width: 100%;
-            padding: 10px;
-            margin: 10px 0;
-            border: 1px solid var(--highlight-border);
-            background-color: var(--highlight-bg);
-            color: var(--text-color);
-            border-radius: 4px;
-        }
-
-        .modal-buttons {
-            display: flex;
-            justify-content: space-between;
-            margin-top: 20px;
-        }
-
-        .modal-buttons button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 4px;
-            cursor: pointer;
-        }
-
-        .btn-ok {
-            background-color: #4CAF50;
-            color: white;
-        }
-
-        .btn-cancel {
-            background-color: #888;
-            color: white;
-        }
-
-        .btn-remove {
-            background-color: #f44336;
-            color: white;
-        }
-
         .home-button {
             position: fixed;
             top: 20px;
@@ -231,19 +175,6 @@
 
     <button id="theme-toggle">Toggle Theme</button>
 
-    <div id="editPasswordModal" class="modal">
-        <div class="modal-content">
-            <h3 id="passwordModalTitle">Edit Password</h3>
-            <input type="password" id="newPassword1" placeholder="Enter new password">
-            <input type="password" id="newPassword2" placeholder="Confirm new password">
-            <div class="modal-buttons">
-                <button onclick="closePasswordModal()" class="btn-cancel">Cancel</button>
-                <button onclick="updatePassword()" class="btn-ok">OK</button>
-                <button onclick="removePassword()" class="btn-remove" id="removePasswordBtn">Remove Password</button>
-            </div>
-        </div>
-    </div>
-
     <footer style="text-align: center; margin-top: 20px; padding: 10px; background-color: #2a2a2a; color: #f0f0f0;">
         <p>
             Source code: <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a> | 
@@ -276,87 +207,6 @@
         // Check for saved theme preference
         if (localStorage.getItem('lightMode') === 'true') {
             html.classList.add('light-mode');
-        }
-
-        function openEditPasswordModal() {
-            document.getElementById('passwordModalTitle').textContent = 'Edit Password';
-            document.getElementById('removePasswordBtn').style.display = 'inline-block';
-            document.getElementById('editPasswordModal').style.display = 'block';
-        }
-
-        function openAddPasswordModal() {
-            document.getElementById('passwordModalTitle').textContent = 'Add Password';
-            document.getElementById('removePasswordBtn').style.display = 'none';
-            document.getElementById('editPasswordModal').style.display = 'block';
-        }
-
-        function closePasswordModal() {
-            document.getElementById('editPasswordModal').style.display = 'none';
-            document.getElementById('newPassword1').value = '';
-            document.getElementById('newPassword2').value = '';
-        }
-
-        function updatePassword() {
-            const password1 = document.getElementById('newPassword1').value;
-            const password2 = document.getElementById('newPassword2').value;
-
-            if (password1 !== password2) {
-                alert('Passwords do not match');
-                return;
-            }
-
-            fetch('{{ url_for("edit_password", vanity=vanity) }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    action: 'update',
-                    new_password: password1
-                }),
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    alert('Password updated successfully');
-                    closePasswordModal();
-                    location.reload();  // Reload the page to reflect the changes
-                } else {
-                    alert('Error updating password: ' + data.error);
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                alert('An error occurred while updating the password');
-            });
-        }
-
-        function removePassword() {
-            if (confirm('Are you sure you want to remove the password?')) {
-                fetch('{{ url_for("edit_password", vanity=vanity) }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        action: 'remove'
-                    }),
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        alert('Password removed successfully');
-                        closePasswordModal();
-                        location.reload();  // Reload the page to reflect the changes
-                    } else {
-                        alert('Error removing password: ' + data.error);
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    alert('An error occurred while removing the password');
-                });
-            }
         }
     </script>
 </body>

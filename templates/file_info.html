@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ filename }} - sxbin</title>
+    <meta property="og:title" content="{{ filename }}">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="{{ request.url }}">
+    <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
+    {% if is_embeddable %}
+    <meta property="og:image" content="{{ file_url }}">
+    {% endif %}
+    <meta property="og:site_name" content="sxbin">
+    <meta property="theme-color" content="#4CAF50">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #e0e0e0;
+            background-color: #1e1e1e;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h2 {
+            color: #4CAF50;
+        }
+        .info-item {
+            margin-bottom: 10px;
+        }
+        .embed-container {
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+        .embed-container img, .embed-container embed {
+            max-width: 100%;
+            max-height: 600px;
+            display: block;
+            margin: 0 auto;
+        }
+        .btn-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        .btn {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 14px;
+            margin: 4px 2px;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        .btn:hover {
+            background-color: #45a049;
+        }
+        .home-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-size: 24px;
+            color: #4CAF50;
+            text-decoration: none;
+        }
+        .home-button:hover {
+            color: #45a049;
+        }
+        #theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: #333;
+            color: #fff;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        footer {
+            text-align: center;
+            margin-top: 20px;
+            padding: 10px;
+            background-color: #2a2a2a;
+            color: #f0f0f0;
+        }
+        .edit-btn, .delete-btn {
+            background-color: #f44336;
+        }
+        .edit-btn:hover, .delete-btn:hover {
+            background-color: #d32f2f;
+        }
+    </style>
+</head>
+<body>
+    <a href="/" class="home-button">&#8962;</a>
+    <div class="container">
+        <h2>{{ filename }}</h2>
+        <div class="info-item"><strong>File size:</strong> {{ file_size|filesizeformat }}</div>
+        <div class="info-item"><strong>Uploaded by:</strong> {{ username }}</div>
+        <div class="info-item"><strong>Date:</strong> {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        
+        {% if is_embeddable %}
+        <div class="embed-container">
+            {% if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg')) %}
+            <img src="{{ file_url }}" alt="{{ filename }}">
+            {% elif filename.lower().endswith('.pdf') %}
+            <embed src="{{ file_url }}" type="application/pdf" width="100%" height="600px">
+            {% endif %}
+        </div>
+        {% endif %}
+        
+        <div class="btn-container">
+            <a href="{{ url_for('redirect_vanity', vanity=vanity, _external=True) }}/download" class="btn">Download</a>
+            <a href="{{ url_for('redirect_vanity', vanity=vanity, _external=True) }}/raw" class="btn">View Raw</a>
+            {% if current_user.is_authenticated and current_user.id == user_id %}
+                {% if filename.lower().endswith(('.txt', '.html', '.css', '.js', '.py', '.md')) or '.' not in filename %}
+                <a href="{{ url_for('edit_content', vanity=vanity) }}" class="btn edit-btn">Edit</a>
+                {% endif %}
+                <form action="{{ url_for('delete_content', vanity=vanity) }}" method="post" style="display: inline;">
+                    <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
+                </form>
+            {% endif %}
+        </div>
+    </div>
+
+    <button id="theme-toggle">Toggle Theme</button>
+
+    <footer>
+        <p>
+            Source code: <a href="https://git.spitkov.hu/cgcristi/aCloud" target="_blank">Spitkov's Git</a> | 
+            <a href="https://office.bence.lol/form/#/2/form/view/z5Cf3CL6tZtPjzKsbcEPync6JE3iyMl22h6thUQg1a4/" target="_blank">Suggestions & Bugs</a> | 
+            <a href="https://office.bence.lol/kanban/#/2/kanban/view/hx6RTcpN0pR7hc1HHkMzG4awMoMdHjR2zbHjG7Xh+wU/embed/" target="_blank">Todo List</a>
+        </p>
+    </footer>
+
+    <script>
+        const themeToggle = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        themeToggle.addEventListener('click', () => {
+            body.classList.toggle('light-mode');
+            localStorage.setItem('theme', body.classList.contains('light-mode') ? 'light' : 'dark');
+        });
+
+        // Check for saved theme preference
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme === 'light') {
+            body.classList.add('light-mode');
+        }
+    </script>
+</body>
+</html>

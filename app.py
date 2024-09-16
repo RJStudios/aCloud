@@ -233,13 +233,15 @@ def serve_user_page(username, filename=None):
 @app.route('/<vanity>/<password>', methods=['GET', 'POST'])
 @app.route('/<vanity>/download', methods=['GET', 'POST'])
 @app.route('/<vanity>/download/<password>', methods=['GET', 'POST'])
+@app.route('/<vanity>/raw', methods=['GET', 'POST'])
+@app.route('/<vanity>/raw/<password>', methods=['GET', 'POST'])
 def redirect_vanity(vanity, password=None):
     app.logger.info(f"Accessing vanity: {vanity}, password: {password}")
     db = get_db()
     cursor = db.cursor()
     
-    # Check if it's a download request
     is_download = 'download' in request.path
+    is_raw = 'raw' in request.path
     
     # First, try to find the content with the full vanity (including extension)
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
@@ -255,11 +257,9 @@ def redirect_vanity(vanity, password=None):
         content_type, content_data, created_at, user_id, is_private, stored_password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
         app.logger.info(f"Content found: type={content_type}, data={content_data}, is_private={is_private}")
         
-        # Convert created_at to datetime object, including microseconds
         try:
             created_at = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S.%f')
         except ValueError:
-            # If the above fails, try without microseconds
             created_at = datetime.strptime(created_at, '%Y-%m-%d %H:%M:%S')
 
         if is_private and stored_password:
@@ -278,19 +278,41 @@ def redirect_vanity(vanity, password=None):
         elif content_type == 'file':
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], content_data)
             if os.path.exists(file_path):
-                if is_download:
-                    # Force download
-                    return send_file(file_path, as_attachment=True, download_name=content_data)
-                else:
-                    # Serve the file for viewing/embedding
+                file_size = os.path.getsize(file_path)
+                file_extension = os.path.splitext(content_data)[1].lower()
+                is_embeddable = file_extension in ['.jpg', '.jpeg', '.png', '.gif', '.svg', '.pdf']
+                file_url = url_for('redirect_vanity', vanity=vanity, _external=True)
+                
+                if is_download or (not is_embeddable and not is_raw):
+                    return send_file(file_path, as_attachment=True)
+                elif is_raw and is_embeddable:
                     return send_file(file_path)
+                else:
+                    return render_template('file_info.html', 
+                                           filename=content_data, 
+                                           file_size=file_size, 
+                                           username=username, 
+                                           created_at=created_at,
+                                           is_embeddable=is_embeddable,
+                                           file_url=file_url,
+                                           vanity=vanity,
+                                           user_id=user_id)
         elif content_type == 'pastebin':
-            first_lines = '\n'.join(content_data.split('\n')[:5])  # Get first 5 lines
-            return render_template('og_pastebin.html', 
-                                   vanity=vanity, 
-                                   first_lines=first_lines, 
-                                   username=username, 
-                                   created_at=created_at)
+            try:
+                lexer = guess_lexer(content_data)
+            except ClassNotFound:
+                lexer = get_lexer_by_name('text')
+            formatter = HtmlFormatter(style='monokai', linenos=True, cssclass="source")
+            highlighted_content = highlight(content_data, lexer, formatter)
+            css = formatter.get_style_defs('.source')
+            return render_template('pastebin.html',
+                                   content={'data': content_data, 'user_id': user_id, 'username': username},
+                                   highlighted_content=highlighted_content,
+                                   css=css,
+                                   raw_content=content_data,
+                                   created_at=created_at,
+                                   vanity=vanity,
+                                   is_private=is_private)
     
     app.logger.error(f"Content not found for vanity: {vanity}")
     return "Not found", 404

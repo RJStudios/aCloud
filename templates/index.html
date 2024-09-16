@@ -285,19 +285,8 @@
             color: white;
         }
 
-        .instant-upload-result {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #2a2a2a;
-            padding: 20px;
-            border-radius: 10px;
-            z-index: 10000;
-            display: none;
-        }
-
         .instant-upload-overlay {
+            display: none;
             position: fixed;
             top: 0;
             left: 0;
@@ -305,16 +294,29 @@
             height: 100%;
             background-color: rgba(0, 0, 0, 0.5);
             z-index: 9999;
-            display: none;
+            justify-content: center;
+            align-items: center;
         }
 
-        .instant-upload-result .close-btn {
+        .instant-upload-result {
+            background-color: #2a2a2a;
+            padding: 20px;
+            border-radius: 10px;
+            position: relative;
+            max-width: 80%;
+        }
+
+        .close-modal {
             position: absolute;
             top: 10px;
-            right: 10px;
-            color: white;
+            right: 15px;
             font-size: 24px;
             cursor: pointer;
+            color: #aaa;
+        }
+
+        .close-modal:hover {
+            color: #fff;
         }
     </style>
 </head>
@@ -405,12 +407,13 @@
         </div>
     </div>
 
-    <div class="instant-upload-overlay"></div>
-    <div class="instant-upload-result">
-        <span class="close-btn" onclick="closeInstantUploadResult()">&times;</span>
-        <h3>File Uploaded</h3>
-        <p>Direct download URL: <a id="directDownloadUrl" href="#" target="_blank"></a></p>
-        <p>Normal URL: <a id="normalUrl" href="#" target="_blank"></a></p>
+    <div class="instant-upload-overlay">
+        <div class="instant-upload-result">
+            <span class="close-modal">&times;</span>
+            <h3>File Uploaded</h3>
+            <p>Direct download URL: <a id="directDownloadUrl" href="#" target="_blank"></a></p>
+            <p>Normal URL: <a id="normalUrl" href="#" target="_blank"></a></p>
+        </div>
     </div>
 
     <footer class="footer">
@@ -782,8 +785,7 @@
                 document.getElementById('directDownloadUrl').textContent = data.download_url;
                 document.getElementById('normalUrl').href = data.url;
                 document.getElementById('normalUrl').textContent = data.url;
-                document.querySelector('.instant-upload-overlay').style.display = 'block';
-                document.querySelector('.instant-upload-result').style.display = 'block';
+                document.querySelector('.instant-upload-overlay').style.display = 'flex';
             } else {
                 alert('Error uploading file: ' + data.error);
             }
@@ -794,10 +796,24 @@
         });
     }
 
-    function closeInstantUploadResult() {
+    // Add this new function to close the modal
+    function closeInstantUploadModal() {
         document.querySelector('.instant-upload-overlay').style.display = 'none';
-        document.querySelector('.instant-upload-result').style.display = 'none';
     }
+
+    // Add event listeners for closing the modal
+    document.addEventListener('DOMContentLoaded', function() {
+        const closeModalButton = document.querySelector('.close-modal');
+        const instantUploadOverlay = document.querySelector('.instant-upload-overlay');
+
+        closeModalButton.addEventListener('click', closeInstantUploadModal);
+
+        instantUploadOverlay.addEventListener('click', function(event) {
+            if (event.target === instantUploadOverlay) {
+                closeInstantUploadModal();
+            }
+        });
+    });
 
     // Paste functionality for file upload
     document.addEventListener('paste', function(e) {
