@@ -954,7 +954,7 @@
                             {% elif upload.type == 'url' %}
                                 Shortened URL: 
                             {% endif %}
-                            <a href="{{ url_for('redirect_vanity', vanity=upload.vanity) }}" target="_blank">
+                            <a href="{{ upload.url }}" target="_blank">
                                 {% if upload.type == 'file' %}
                                     {{ upload.data }}
                                 {% else %}

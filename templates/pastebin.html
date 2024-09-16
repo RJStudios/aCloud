@@ -3,14 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ filename }} - sxbin</title>
-    <meta property="og:title" content="{{ filename }}">
+    <title>Pastebin {{ vanity }} - sxbin</title>
+    <meta property="og:title" content="Pastebin {{ vanity }} - sxbin">
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ request.url }}">
-    <meta property="og:description" content="File size: {{ file_size|filesizeformat }} | Uploaded by: {{ username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
-    {% if is_embeddable %}
-    <meta property="og:image" content="{{ file_url }}">
-    {% endif %}
+    <meta property="og:description" content="Uploaded by: {{ content.username }} | Date: {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}">
     <meta property="og:site_name" content="sxbin">
     <meta property="theme-color" content="#4CAF50">
     <style>
@@ -152,32 +149,25 @@
 <body>
     <a href="/" class="home-button">&#8962;</a>
     <div class="container">
-        <h2>{{ filename }}</h2>
-        <div class="info-item"><strong>File size:</strong> {{ file_size|filesizeformat }}</div>
-        <div class="info-item"><strong>Uploaded by:</strong> {{ username }}</div>
-        <div class="info-item"><strong>Date:</strong> {{ created_at.strftime('%Y-%m-%d %H:%M:%S') }}</div>
+        <h2>Content</h2>
+        <p>Uploaded by: {{ content.username }}</p>
+        <p>Created at: {{ created_at }}</p>
         
-        {% if is_embeddable %}
-        <div class="embed-container">
-            {% if filename.lower().endswith(('.jpg', '.jpeg', '.png', '.gif', '.svg')) %}
-            <img src="{{ file_url }}/raw" alt="{{ filename }}">
-            {% elif filename.lower().endswith('.pdf') %}
-            <embed src="{{ file_url }}/raw" type="application/pdf" width="100%" height="600px">
-            {% endif %}
+        <div class="highlight">
+            {{ highlighted_content|safe }}
         </div>
-        {% else %}
-        <div class="info-item"><strong>File type:</strong> {{ filename.split('.')[-1].upper() if '.' in filename else 'Unknown' }}</div>
-        {% endif %}
-        
         <div class="btn-container">
-            <a href="{{ file_url }}/download" class="btn">Download</a>
-            <a href="{{ file_url }}/raw" class="btn">View Raw</a>
-            {% if current_user.is_authenticated and current_user.id == user_id %}
-                {% if filename.lower().endswith(('.txt', '.html', '.css', '.js', '.py', '.md')) or '.' not in filename %}
-                <a href="{{ url_for('edit_content', vanity=vanity) }}" class="btn edit-btn">Edit</a>
+            <button onclick="copyToClipboard()" class="btn">Copy</button>
+            <a href="{{ url_for('raw_vanity', vanity=vanity) }}" class="btn">View Raw</a>
+            {% if current_user.is_authenticated and current_user.id == content.user_id %}
+                <a href="{{ url_for('edit_content', vanity=vanity) }}" class="btn">Edit</a>
+                {% if is_private %}
+                    <button onclick="openEditPasswordModal()" class="btn">Edit Password</button>
+                {% else %}
+                    <button onclick="openAddPasswordModal()" class="btn">Add Password</button>
                 {% endif %}
-                <form action="{{ url_for('delete_content', vanity=vanity) }}" method="post" style="display: inline;">
-                    <button type="submit" class="btn delete-btn" onclick="return confirm('Are you sure you want to delete this file?')">Delete</button>
+                <form action="{{ url_for('delete_content', vanity=vanity) }}" method="post">
+                    <button type="submit" class="btn">Delete</button>
                 </form>
             {% endif %}
         </div>
@@ -194,6 +184,16 @@
     </footer>
 
     <script>
+        const rawContent = {{ raw_content|tojson }};
+
+        function copyToClipboard() {
+            navigator.clipboard.writeText(rawContent).then(() => {
+                alert('Copied to clipboard!');
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+            });
+        }
+
         const themeToggle = document.getElementById('theme-toggle');
         const html = document.documentElement;
 

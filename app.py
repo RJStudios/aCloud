@@ -233,8 +233,6 @@ def serve_user_page(username, filename=None):
 @app.route('/<vanity>/<password>', methods=['GET', 'POST'])
 @app.route('/<vanity>/download', methods=['GET', 'POST'])
 @app.route('/<vanity>/download/<password>', methods=['GET', 'POST'])
-@app.route('/<vanity>/raw', methods=['GET', 'POST'])
-@app.route('/<vanity>/raw/<password>', methods=['GET', 'POST'])
 def redirect_vanity(vanity, password=None):
     app.logger.info(f"Accessing redirect_vanity: vanity={vanity}, password={password}")
     app.logger.info(f"Request path: {request.path}")
@@ -247,10 +245,16 @@ def redirect_vanity(vanity, password=None):
     cursor = db.cursor()
     
     is_download = 'download' in request.path
-    is_raw = 'raw' in request.path
     
+    # First, try to find the content with the full vanity (including extension)
     cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
+    
+    # If not found, try without the extension
+    if not content:
+        vanity_without_extension = os.path.splitext(vanity)[0]
+        cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity LIKE ?", (f"{vanity_without_extension}%",))
+        content = cursor.fetchone()
     
     if content:
         content_type, content_data, created_at, user_id, is_private, stored_password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
@@ -284,8 +288,6 @@ def redirect_vanity(vanity, password=None):
                 
                 if is_download:
                     return send_file(file_path, as_attachment=True)
-                elif is_raw:
-                    return send_file(file_path)
                 else:
                     return render_template('file_info.html', 
                                            filename=content_data, 
@@ -455,12 +457,16 @@ def user_files(username, subpath=''):
     
     uploads = []
     for upload in user_uploads:
+        vanity, content_type, data, created_at, _, is_private = upload[:6]
+        url = url_for('redirect_vanity', vanity=vanity, _external=True)
         uploads.append({
-            'type': upload[1],
-            'vanity': upload[0],
-            'data': upload[2],
-            'created_at': upload[3],
-            'is_private': upload[5]
+            'type': content_type,
+            'vanity': vanity,
+            'data': data,
+            'created_at': created_at,
+            'is_private': is_private,
+            'url': url,
+            'download_url': url + '/download' if content_type == 'file' else None
         })
     
     parent_folder = os.path.dirname(subpath.rstrip('/')) if subpath else None
@@ -798,11 +804,19 @@ def delete_content(vanity):
 def content_info(vanity):
     db = get_db()
     cursor = db.cursor()
-    cursor.execute("SELECT * FROM content WHERE vanity = ?", (vanity,))
+    
+    # First, try to find the content with the full vanity (including extension)
+    cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity = ?", (vanity,))
     content = cursor.fetchone()
     
+    # If not found, try without the extension
+    if not content:
+        vanity_without_extension = os.path.splitext(vanity)[0]
+        cursor.execute("SELECT content.*, users.username FROM content LEFT JOIN users ON content.user_id = users.id WHERE content.vanity LIKE ?", (f"{vanity_without_extension}%",))
+        content = cursor.fetchone()
+    
     if content:
-        content_type, content_data, created_at, user_id, is_private, password = content[1], content[2], content[3], content[4], content[5], content[6]
+        content_type, content_data, created_at, user_id, is_private, password, username = content[1], content[2], content[3], content[4], content[5], content[6], content[7]
         
         if is_private and password:
             if request.method == 'POST':
@@ -811,8 +825,6 @@ def content_info(vanity):
                     return render_template('password_prompt.html', vanity=vanity, error="Incorrect password")
             else:
                 return render_template('password_prompt.html', vanity=vanity, error=None)
-        
-        username = get_username(user_id)
         
         file_size = None
         is_media = False
@@ -1072,101 +1084,122 @@ def rename_user_file(username):
 
 @app.route('/upload/file', methods=['POST'])
 def upload_file():
-    app.logger.info("Starting file upload process")
+    app.logger.info("Starting upload_file function")
+    app.logger.info("Code: if 'file' not in request.files:")
     if 'file' not in request.files:
         app.logger.error("No file part in the request")
         return jsonify({'success': False, 'error': 'No file part'}), 400
+    
+    app.logger.info("Code: file = request.files['file']")
     file = request.files['file']
+    app.logger.info(f"File object: {file}")
+    
+    app.logger.info("Code: if file.filename == '':")
     if file.filename == '':
         app.logger.error("No selected file")
         return jsonify({'success': False, 'error': 'No selected file'}), 400
+    
+    app.logger.info("Code: if file:")
     if file:
         try:
             app.logger.info(f"Processing file: {file.filename}")
+            
+            app.logger.info("Code: filename = secure_filename(file.filename)")
             filename = secure_filename(file.filename)
+            app.logger.info(f"Secure filename: {filename}")
+            
+            app.logger.info("Code: extension = os.path.splitext(filename)[1].lower()")
             extension = os.path.splitext(filename)[1].lower()
+            app.logger.info(f"File extension: {extension}")
+            
+            app.logger.info("Code: vanity = shortuuid.uuid()[:8]")
             vanity = shortuuid.uuid()[:8]
+            app.logger.info(f"Generated vanity: {vanity}")
+            
+            app.logger.info("Code: vanity_with_extension = f'{vanity}{extension}'")
             vanity_with_extension = f"{vanity}{extension}"
+            app.logger.info(f"Vanity with extension: {vanity_with_extension}")
+            
+            app.logger.info("Code: new_filename = vanity_with_extension")
             new_filename = vanity_with_extension
+            app.logger.info(f"New filename: {new_filename}")
+            
+            app.logger.info("Code: file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)")
             file_path = os.path.join(current_app.config['UPLOAD_FOLDER'], new_filename)
+            app.logger.info(f"File path: {file_path}")
             
-            app.logger.info(f"Saving file to: {file_path}")
+            app.logger.info("Code: file.save(file_path)")
             file.save(file_path)
+            app.logger.info("File saved successfully")
             
+            app.logger.info("Code: user_id = current_user.id if current_user.is_authenticated else None")
             user_id = current_user.id if current_user.is_authenticated else None
             app.logger.info(f"User ID: {user_id}")
             
+            app.logger.info("Code: password = request.form.get('password')")
             password = request.form.get('password')
+            app.logger.info(f"Password: {'Set' if password else 'Not set'}")
+            
+            app.logger.info("Code: is_private = 1 if password else 0")
             is_private = 1 if password else 0
             app.logger.info(f"Is private: {is_private}")
             
+            app.logger.info("Code: db = get_db()")
             db = get_db()
-            cursor = db.cursor()
-            app.logger.info("Inserting file info into database")
-            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
-                           (vanity_with_extension, 'file', new_filename, datetime.now(), user_id, is_private, password))
-            db.commit()
+            app.logger.info("Database connection established")
             
-            # Determine the scheme based on the original request
+            app.logger.info("Code: cursor = db.cursor()")
+            cursor = db.cursor()
+            app.logger.info("Database cursor created")
+            
+            app.logger.info("Inserting file info into database")
+            app.logger.info("Code: vanity_for_db = vanity_with_extension")
+            vanity_for_db = vanity_with_extension
+            app.logger.info(f"Vanity for DB: {vanity_for_db}")
+            
+            app.logger.info("Code: cursor.execute(...)")
+            cursor.execute("INSERT INTO content (vanity, type, data, created_at, user_id, is_private, password) VALUES (?, ?, ?, ?, ?, ?, ?)",
+                           (vanity_for_db, 'file', new_filename, datetime.now(), user_id, is_private, password))
+            app.logger.info("SQL query executed")
+            
+            app.logger.info("Code: db.commit()")
+            db.commit()
+            app.logger.info("Database changes committed")
+            
+            app.logger.info("Code: scheme = 'https' if request.is_secure else 'http'")
             scheme = 'https' if request.is_secure else 'http'
             app.logger.info(f"Using scheme: {scheme}")
             
             app.logger.info("Generating URLs")
-            app.logger.info(f"vanity_with_extension: {vanity_with_extension}")
-            
-            # Log the URL generation process step by step
-            app.logger.info("Generating short URL:")
-            app.logger.info(f"1. Calling url_for with: 'redirect_vanity', vanity={vanity_with_extension}")
-            app.logger.info(f"   Full parameters: endpoint='redirect_vanity', vanity={vanity_with_extension}, _external=True, _scheme={scheme}")
-            
-            # Capture the result of url_for and remove the /raw suffix
+            app.logger.info("Code: short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme)")
             short_url = url_for('redirect_vanity', vanity=vanity_with_extension, _external=True, _scheme=scheme)
-            short_url = short_url.rstrip('/raw')
+            short_url = short_url.rstrip('/download')  # Remove the '/download' suffix if present
+            app.logger.info(f"Generated short URL: {short_url}")
             
-            app.logger.info(f"2. Result of url_for (after removing /raw): {short_url}")
-            app.logger.info(f"3. Inspecting short_url:")
-            app.logger.info(f"   - Base: {short_url.split('?')[0]}")
-            app.logger.info(f"   - Query parameters: {short_url.split('?')[1] if '?' in short_url else 'None'}")
-            
-            app.logger.info("Generating download URL:")
+            app.logger.info("Code: download_url = short_url + '/download'")
             download_url = short_url + '/download'
-            app.logger.info(f"4. Download URL: {download_url}")
+            app.logger.info(f"Generated download URL: {download_url}")
             
-            app.logger.info("Generating deletion URL:")
-            app.logger.info(f"5. Calling url_for with: 'delete_content', vanity={vanity_with_extension}")
-            app.logger.info(f"   Full parameters: endpoint='delete_content', vanity={vanity_with_extension}, _external=True, _scheme={scheme}")
-            
-            # Capture the result of url_for for deletion
+            app.logger.info("Code: deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True, _scheme=scheme)")
             deletion_url = url_for('delete_content', vanity=vanity_with_extension, _external=True, _scheme=scheme)
+            app.logger.info(f"Generated deletion URL: {deletion_url}")
             
-            app.logger.info(f"6. Result of deletion url_for: {deletion_url}")
+            app.logger.info("Preparing JSON response")
+            response_data = {
+                'success': True,
+                'vanity': vanity_with_extension,
+                'url': short_url,
+                'download_url': download_url,
+                'deletion_url': deletion_url,
+                'filename': new_filename
+            }
+            app.logger.info(f"Response data: {response_data}")
             
-            # Add debug logging
-            app.logger.info(f"File uploaded: {new_filename}")
-            app.logger.info(f"File path: {file_path}")
-            app.logger.info(f"Short URL: {short_url}")
-            app.logger.info(f"Download URL: {download_url}")
-            
-            # Check if the request is from ShareX
-            if 'X-API-Key' in request.headers:
-                app.logger.info("Request from ShareX detected")
-                return json.dumps({
-                    'status': 'success',
-                    'url': short_url,
-                    'deletion_url': deletion_url,
-                })
-            else:
-                app.logger.info("Returning JSON response")
-                return jsonify({
-                    'success': True,
-                    'vanity': vanity_with_extension,
-                    'url': short_url,
-                    'download_url': download_url,
-                    'deletion_url': deletion_url,
-                    'filename': new_filename
-                })
+            return jsonify(response_data)
+        
         except Exception as e:
             app.logger.error(f"Error uploading file: {str(e)}")
+            app.logger.exception("Exception traceback:")
             return jsonify({'success': False, 'error': str(e)}), 500
 
     app.logger.error("Unknown error occurred")
