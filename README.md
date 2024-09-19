@@ -25,5 +25,5 @@ Rookie Mistake: when you self-host it, you can open it in localhost:7123, when m
 </br>
 </br>
 7. Demo:
-<iframe src="https://cgcristi.xyz/demo.mp4" controls></iframe>
+<video src="https://cgcristi.xyz/demo.mp4" controls></video>
 
